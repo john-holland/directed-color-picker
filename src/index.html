@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+      .dropzone {
+        border: dashed 4px yellow;
+        background-color: #3aa9bb;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+      }
+
+      .pallet {
+        display: block;
+        width: 500px;
+        height: 300px;
+      }
+
+      .pallet div {
+        display: inline-block;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+    <!-- <script src="https://d3js.org/d3-dispatch.v2.min.js"></script>
+    <script src="https://d3js.org/d3-quadtree.v2.min.js"></script>
+    <script src="https://d3js.org/d3-timer.v2.min.js"></script>
+    <script src="https://d3js.org/d3-force.v2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.2/tinycolor.min.js" integrity="sha512-+aXA9mgbUvFe0ToTlbt8/3vT7+nOgUmFw29wfFCsGoh8AZMRSU0p4WtOvC1vkF2JBrndPN2TuNZsHPAKPPxe8Q==" crossorigin="anonymous"></script> -->
+  </head>
+  <body>
+    <input class="iteration-count" type="text" value="10" />
+    <div class="dropzone">
+      <input type="file" class="file-upload" />
+    </div>
+
+    <div class="pallet"></div>
+
+    <canvas />
+  </body>
+  <script src="bundle.js"></script>
+</html>
