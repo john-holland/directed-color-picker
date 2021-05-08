@@ -9,13 +9,19 @@ module.exports = {
   },
   devtool: 'source-map',
   plugins: [
-        new CopyWebpackPlugin({
-            patterns: [
-                {
-                  from: 'src/*.html',
-                  to: 'index.html'
-                }
-            ]
-        })
-    ]
+    new CopyWebpackPlugin({
+        patterns: [
+            {
+              from: 'src/*.html',
+              to: 'index.html'
+            }
+        ]
+    })
+  ],
+  resolve: {
+    alias: {
+        'node_modules': path.join(__dirname, 'node_modules'),
+        'bower_modules': path.join(__dirname, 'bower_modules'),
+    }
+  }
 };

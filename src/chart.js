@@ -1,63 +1,126 @@
-import d3 from 'd3';
+import 'node_modules/d3-force/dist/d3-force.js';
+import * as d3 from 'd3/dist/d3.js';
 
-const makeChart = () => {
+function clamp(x, lo, hi) {
+  return x < lo ? lo : x > hi ? hi : x;
+}
+
+/**
+  node = {
+    x: 0,
+    y: 0,
+    color
+  }
+ */
+
+function createGraph(nodes = []) {
+  const links = [];
+
+  return {
+    nodes: nodes.reduce((a, c, i) => {
+      // it would be cool if the x and y were multiplied by a normalized vector from the center of the photo
+      //  but for now we'll just add a diagonal
+      const colorNode = {
+        index: i,
+        x: c.x + 50,
+        y: c.y + 50,
+        vy: Math.random() * -0.00000001,
+        vx: Math.random() * 0.00000001,
+        color: c.color
+      };
+
+      const positionNode = {
+        index: i,
+        x: c.x,
+        y: c.y,
+        vy: 0,
+        vx: 0,
+        color: undefined
+      }
+
+      a.push(colorNode);
+      a.push(positionNode);
+
+      links.push({
+        source: positionNode,
+        target: colorNode,
+        index: i
+      });
+
+      return a;
+    }, []),
+    links
+  };
+}
+
+function generateChart(width, height, graph) {
   const svg = d3.create("svg")
-      .attr("viewBox", [-width / 2, -height / 2, width, height]);
+                .attr('width', width*2)
+                .attr('height', height*2),
+                // .attr("viewBox", [0, 0, width, height])
+                // .attr('preserveAspectRatio', 'xMidYMid meet'),
+        link = svg
+          .selectAll(".link")
+          .data(graph.links)
+          .join("line")
+          .classed("link", true),
+        node = svg
+          .selectAll(".node")
+          .data(graph.nodes)
+          .join("circle")
+          .attr("r", n => n.color ? 12 : 2)
+          .style("fill", n => n.color ? n.color : "#333")
+          .classed("node", true);
 
-  const simulation = d3.forceSimulation()
-      .force("charge", d3.forceManyBody().strength(-1000))
-      .force("link", d3.forceLink().id(d => d.id).distance(200))
-      .force("x", d3.forceX())
-      .force("y", d3.forceY())
-      .on("tick", ticked);
+  const simulation = d3
+    .forceSimulation()
+    .nodes(graph.nodes)
+    //.force("charge", d3.forceManyBody())
+    //.force("center", d3.forceCenter(width / 2, height / 2))
+    //.force("link", d3.forceLink(graph.links))
+    .on("tick", tick);
 
-  let link = svg.append("g")
-      .attr("stroke", "#000")
-      .attr("stroke-width", 1.5)
-    .selectAll("line");
+  const drag = d3
+    .drag()
+    .on("start", dragstart)
+    .on("drag", dragged);
 
-  let node = svg.append("g")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 1.5)
-    .selectAll("circle");
+  node.call(drag).on("click", click);
 
-  function ticked() {
-    node.attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-
-    link.attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
+  function tick() {
+    link
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+    node
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
   }
 
-  // Terminate the force layout when this cell re-runs.
-  invalidation.then(() => simulation.stop());
+  function click(event, d) {
+    delete d.fx;
+    delete d.fy;
+    d3.select(this).classed("fixed", false);
+    simulation.alpha(1).restart();
+  }
 
-  return Object.assign(svg.node(), {
-    update({nodes, links}) {
+  function dragstart() {
+    d3.select(this).classed("fixed", true);
+  }
 
-      // Make a shallow copy to protect against mutation, while
-      // recycling old nodes to preserve position and velocity.
-      const old = new Map(node.data().map(d => [d.id, d]));
-      nodes = nodes.map(d => Object.assign(old.get(d.id) || {}, d));
-      links = links.map(d => Object.assign({}, d));
+  function dragged(event, d) {
+    d.fx = clamp(event.x, 0, width);
+    d.fy = clamp(event.y, 0, height);
+    simulation.alpha(1).restart();
+  }
+  return {
+    svg: svg.node(),
+    simulation
+  }
+}
 
-      node = node
-        .data(nodes, d => d.id)
-        .join(enter => enter.append("circle")
-          .attr("r", 8)
-          .attr("fill", d => color(d.id)));
-
-      link = link
-        .data(links, d => [d.source, d.target])
-        .join("line");
-
-      simulation.nodes(nodes);
-      simulation.force("link").links(links);
-      simulation.alpha(1).restart();
-    }
-  });
-};
-
-export default makeChart;
+export {
+  generateChart,
+  createGraph
+}

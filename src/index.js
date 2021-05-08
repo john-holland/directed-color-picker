@@ -2,6 +2,7 @@ import d3_force from 'd3-force';
 import d3 from 'd3';
 import tinycolor from 'tinycolor2';
 import clusters from 'clusters';
+import { createGraph, generateChart } from './chart';
 
 // get the image
 // run k-means clustering on the hsl color values
@@ -10,6 +11,15 @@ import clusters from 'clusters';
 //  * highest saturation?
 //  * brightest?
 //  * highest light values
+
+/**
+ *  todo:
+ *   - use background worker instead of locking up the page
+ *   - parameterize the iteration count for k nearest neighbors
+ *   - maybe support image scaling for faster, high iteration knn
+ *   - it seems like it doesn't find examples for each of the colors, which odd?
+ *   - drag and drop needs prevent default for files etc so the browser doesn't just load them
+ */
 
 const image = new Image();
 
@@ -33,6 +43,13 @@ function runUpload( file ) {
   });
 }
 
+const v3distance = (v1, v2) => {
+  const x = v1[0] - v2[0];
+  const y = v1[1] - v2[1];
+  const z = v1[2] - v2[2];
+  return Math.pow(x*x + y*y + z*z, 0.5)
+}
+
 document.querySelector('.file-upload').onchange = function() {
   if (!this.files.length) return;
   runUpload(this.files[0]).then(image => {
@@ -48,7 +65,7 @@ document.querySelector('.file-upload').onchange = function() {
     const imageData = ctx.getImageData(0, 0, width, height);
 
     const hsvArray = [];
-    //const colors = [];
+    const colors = [];
     for (let i = 0; i < imageData.data.length; i += 4) {
       // Modify pixel data
       const rgba = tinycolor({
@@ -62,23 +79,28 @@ document.querySelector('.file-upload').onchange = function() {
         h, s, v
       } = rgba.toHsv();
       hsvArray.push([h,s,v]);
-      // rgba.x = i / 4 % width;
-      // rgba.y = Math.floor(i / 4 / width);
-      // colors.push(rgba);
+      colors.push({
+        x: (i / 4) % width,
+        y: Math.floor(i / 4 / width),
+        color: rgba.toHexString(),
+        hsv: [h,s,v]
+      });
     }
 
     //number of clusters, defaults to undefined
     clusters.k(10);
 
     //number of iterations (higher number gives more time to converge), defaults to 1000
-    clusters.iterations(3);//Number(document.querySelector('.iteration-count')));
+    clusters.iterations(30);//Number(document.querySelector('.iteration-count')));
 
     //data from which to identify clusters, defaults to []
     clusters.data(hsvArray);
 
     console.log(clusters.clusters());
     const pallet = document.querySelector('.pallet');
-    clusters.clusters().forEach(cluster => {
+    const nodeClusters = clusters.clusters();
+    const centroids = nodeClusters.map(n => n.centroid);
+    nodeClusters.forEach(cluster => {
       // const points = cluster.points.map(c => {
       //   const [h,s,v] = c;
       //   return tinycolor({h,s,v});
@@ -92,7 +114,40 @@ document.querySelector('.file-upload').onchange = function() {
       div.style.cssText = `background-color: ${centroid.toHexString()}; width: 80px; height: 80px;`;
 
       pallet.append(div);
-    })
+    });
+
+    const graphNodes = centroids.map(c => {
+      const [h,s,v] = c;
+      const centroidHSV = [h,s,v];
+      const color = tinycolor({ h,s,v }).toHexString();
+      let ex = undefined;
+      colors.reduce((a, c) => {
+        const distance = v3distance(centroidHSV, c.hsv);
+        if (distance < a) {
+          ex = c;
+          return distance;
+        } else {
+          return a;
+        }
+      }, 1000000);
+      // this could be a little better... :shrug:
+      const example = ex;
+
+      if (!example) {
+        console.log(`unable to find color example for color: ${color}`);
+        return undefined;
+      }
+      return {
+        x: example.x,
+        y: example.y,
+        color: color
+      };
+    }).filter(c => !!c);
+
+    const graph = createGraph(graphNodes);
+
+    const { svg, simulation } = generateChart(width, height, graph);
+    document.querySelector('.image-container').append(svg);
 
     console.log(imageData);
   });
