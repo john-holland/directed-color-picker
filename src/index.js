@@ -19,6 +19,8 @@ import { createGraph, generateChart } from './chart';
  *   - maybe support image scaling for faster, high iteration knn
  *   - it seems like it doesn't find examples for each of the colors, which odd?
  *   - drag and drop needs prevent default for files etc so the browser doesn't just load them
+ *   - consider switching the current knn implementation for the clairvoyance impl,
+ *       and providing progress updates using that callback from the background worker?
  */
 
 const image = new Image();
@@ -91,7 +93,7 @@ document.querySelector('.file-upload').onchange = function() {
     clusters.k(10);
 
     //number of iterations (higher number gives more time to converge), defaults to 1000
-    clusters.iterations(30);//Number(document.querySelector('.iteration-count')));
+    clusters.iterations(10);//Number(document.querySelector('.iteration-count')));
 
     //data from which to identify clusters, defaults to []
     clusters.data(hsvArray);

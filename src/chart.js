@@ -24,8 +24,8 @@ function createGraph(nodes = []) {
         index: i,
         x: c.x + 50,
         y: c.y + 50,
-        vy: Math.random() * -0.00000001,
-        vx: Math.random() * 0.00000001,
+        vy: Math.random() * 10,
+        vx: Math.random() * 10,
         color: c.color
       };
 
