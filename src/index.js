@@ -2,7 +2,13 @@ import d3_force from 'd3-force';
 import d3 from 'd3';
 import tinycolor from 'tinycolor2';
 import clusters from 'clusters';
-import { createGraph, generateChart } from './chart';
+import { createGraph, generateChart } from './chart.js';
+import { WorkBoots } from './util/work-boots.js';
+
+let href = document.location.href;
+href = href.indexOf('index.html') > -1 ? href.replace('index.html', '') : href;
+// as this runs from the dist directory, we want to generate multiple outputs
+const workBoots = new WorkBoots({ socksFile: href + 'k-means-clustering-worker.js' });
 
 // get the image
 // run k-means clustering on the hsl color values
@@ -14,12 +20,20 @@ import { createGraph, generateChart } from './chart';
 
 /**
  *  todo:
- *   - use background worker instead of locking up the page
- *   - parameterize the iteration count for k nearest neighbors
+ *   - MAKEOVER!!!!! pull in bootstrap material design, and maybe react
+ *   ✅use background worker instead of locking up the page
+ *   ✅parameterize the iteration count for k nearest neighbors
  *   - maybe support image scaling for faster, high iteration knn
- *   - it seems like it doesn't find examples for each of the colors, which odd?
+        FOR SURE! however! i noticed some color desaturation from scaling in the mac os preview app,
+        which is VERY suprising! OMG!?!?! WTFBBQ?!?!?
+ *   - it seems like it doesn't find examples for each of the colors, which is odd?
+        i think KMC is a decent choice, but not entirely what we want
+        maybe, knn, or some hybrid approach, like instead of moving the centroids,
+          could we pull the colors towards one another? idk, worth thought maybe?
  *   - drag and drop needs prevent default for files etc so the browser doesn't just load them
- *   - consider switching the current knn implementation for the clairvoyance impl,
+        yeah no clue, tried the body attributes, and prevent default on the event listener
+        i haven't tried use whatever yet, but i forget
+ *   ✅consider switching the current knn implementation for the clairvoyance impl,
  *       and providing progress updates using that callback from the background worker?
  */
 
@@ -44,17 +58,23 @@ function runUpload( file ) {
   	}
   });
 }
+//
+// document.addEventListener('ondrop', (e) => {
+//   e.preventDefault();
+// });
 
-const v3distance = (v1, v2) => {
-  const x = v1[0] - v2[0];
-  const y = v1[1] - v2[1];
-  const z = v1[2] - v2[2];
-  return Math.pow(x*x + y*y + z*z, 0.5)
-}
+document.addEventListener('ondrag', (e) => {
+  e.preventDefault();
+});
+
+document.addEventListener('ondragstart', (e) => {
+  e.preventDefault();
+});
 
 document.querySelector('.file-upload').onchange = function() {
   if (!this.files.length) return;
   runUpload(this.files[0]).then(image => {
+    document.querySelector('svg')?.remove();
     const width = image.width;
     const height = image.height;
 
@@ -66,90 +86,52 @@ document.querySelector('.file-upload').onchange = function() {
 
     const imageData = ctx.getImageData(0, 0, width, height);
 
-    const hsvArray = [];
-    const colors = [];
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      // Modify pixel data
-      const rgba = tinycolor({
-        r: imageData.data[i + 0],
-        g: imageData.data[i + 1],
-        b: imageData.data[i + 2],
-        a: imageData.data[i + 3]
-      });
+    workBoots.ready().then(() => {
+      workBoots.onMessage(({ data }) => {
+        if ('graphNodes' in data) {
+          const { graphNodes } = data;
+          const pallet = document.querySelector('.pallet');
+          // for note this is a list of colors NEAREST their centroid
+          graphNodes.forEach(centroid => {
+            // const points = cluster.points.map(c => {
+            //   const [h,s,v] = c;
+            //   return tinycolor({h,s,v});
+            // });
+            //
+            // points.sort((a, b) => a.getBrightness() - b.getBrightness())
+            //const point = points[0];
+            const div = document.createElement("div");
+            div.style.cssText = `background-color: ${centroid.color}; width: 80px; height: 80px;`;
 
-      const {
-        h, s, v
-      } = rgba.toHsv();
-      hsvArray.push([h,s,v]);
-      colors.push({
-        x: (i / 4) % width,
-        y: Math.floor(i / 4 / width),
-        color: rgba.toHexString(),
-        hsv: [h,s,v]
-      });
-    }
+            pallet.append(div);
+          });
 
-    //number of clusters, defaults to undefined
-    clusters.k(10);
+          const graph = createGraph(graphNodes);
 
-    //number of iterations (higher number gives more time to converge), defaults to 1000
-    clusters.iterations(10);//Number(document.querySelector('.iteration-count')));
+          const { svg, simulation } = generateChart(width, height, graph);
 
-    //data from which to identify clusters, defaults to []
-    clusters.data(hsvArray);
+          document.querySelector('.image-container').append(svg);
+        } else if ('progressUpdate' in data) {
+          const { progressUpdate } = data;
 
-    console.log(clusters.clusters());
-    const pallet = document.querySelector('.pallet');
-    const nodeClusters = clusters.clusters();
-    const centroids = nodeClusters.map(n => n.centroid);
-    nodeClusters.forEach(cluster => {
-      // const points = cluster.points.map(c => {
-      //   const [h,s,v] = c;
-      //   return tinycolor({h,s,v});
-      // });
-      //
-      // points.sort((a, b) => a.getBrightness() - b.getBrightness())
-      const [h,s,v] = cluster.centroid;
-      const centroid = tinycolor({ h, s, v });
-      //const point = points[0];
-      const div = document.createElement("div");
-      div.style.cssText = `background-color: ${centroid.toHexString()}; width: 80px; height: 80px;`;
-
-      pallet.append(div);
-    });
-
-    const graphNodes = centroids.map(c => {
-      const [h,s,v] = c;
-      const centroidHSV = [h,s,v];
-      const color = tinycolor({ h,s,v }).toHexString();
-      let ex = undefined;
-      colors.reduce((a, c) => {
-        const distance = v3distance(centroidHSV, c.hsv);
-        if (distance < a) {
-          ex = c;
-          return distance;
-        } else {
-          return a;
+          // progress!
+          console.log("... progress!")
         }
-      }, 1000000);
-      // this could be a little better... :shrug:
-      const example = ex;
+      });
 
-      if (!example) {
-        console.log(`unable to find color example for color: ${color}`);
-        return undefined;
-      }
-      return {
-        x: example.x,
-        y: example.y,
-        color: color
-      };
-    }).filter(c => !!c);
+      let iterations = Number(document.querySelector('.iteration-count').value);
+      iterations = (isNaN(iterations) || +iterations === 0) ? 10 : iterations
+      let palletSize = Number(document.querySelector('.pallet-size').value);
+      palletSize = (isNaN(palletSize) || +palletSize === 0) ? 10 : palletSize
 
-    const graph = createGraph(graphNodes);
-
-    const { svg, simulation } = generateChart(width, height, graph);
-    document.querySelector('.image-container').append(svg);
+      workBoots.postMessage({
+        imageData: imageData.data,
+        iterations,
+        palletSize,
+        width,
+        height
+      });
+    });
 
     console.log(imageData);
   });

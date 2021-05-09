@@ -2,10 +2,14 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.js',
+  mode: 'development',
+  entry: {
+    'bundle': './src/index.js',
+    'k-means-clustering-worker': './src/algorithms/k-means-clustering.worker.js'
+  },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        filename: '[name].js'
   },
   devtool: 'source-map',
   plugins: [
