@@ -3,12 +3,30 @@ import d3 from 'd3';
 import tinycolor from 'tinycolor2';
 import clusters from 'clusters';
 import { createGraph, generateChart } from './chart.js';
-import { WorkBoots } from './util/work-boots.js';
+const workbootsExports = require('workboots');
+console.log('Constructor found! Using window.WorkBoots.WorkBoots');
+const WorkBoots = window.WorkBoots.WorkBoots;
 
 let href = document.location.href;
 href = href.indexOf('index.html') > -1 ? href.replace('index.html', '') : href;
+const workerPath = href + 'k-means-clustering-worker.js?v=' + Date.now();
+console.log('Worker path:', workerPath);
+console.log('Current location:', document.location.href);
 // as this runs from the dist directory, we want to generate multiple outputs
-const workBoots = new WorkBoots({ socksFile: href + 'k-means-clustering-worker.js' });
+console.log('Creating WorkBoots with socksFile:', workerPath);
+const workBoots = new WorkBoots({ socksFile: workerPath });
+console.log('WorkBoots created:', workBoots);
+console.log('WorkBoots properties:', Object.keys(workBoots));
+console.log('WorkBoots ready method:', typeof workBoots.ready);
+console.log('WorkBoots methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(workBoots)));
+
+// Add direct message listener to see what the worker is sending
+if (workBoots.worker) {
+  console.log('Adding direct worker message listener...');
+  workBoots.worker.addEventListener('message', (event) => {
+    console.log('MAIN: Received worker message:', event.data);
+  });
+}
 
 // get the image
 // run k-means clustering on the hsl color values
@@ -63,18 +81,82 @@ function runUpload( file ) {
 //   e.preventDefault();
 // });
 
-document.addEventListener('ondrag', (e) => {
-  e.preventDefault();
+// Drag and drop functionality
+const dropzone = document.getElementById('dropzone');
+const fileUpload = document.querySelector('.file-upload');
+const loading = document.getElementById('loading');
+const progressBar = document.getElementById('progress-bar');
+
+// Prevent default drag behaviors
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropzone.addEventListener(eventName, preventDefaults, false);
+  document.body.addEventListener(eventName, preventDefaults, false);
 });
 
-document.addEventListener('ondragstart', (e) => {
+function preventDefaults(e) {
   e.preventDefault();
+  e.stopPropagation();
+}
+
+// Highlight drop zone when item is dragged over it
+['dragenter', 'dragover'].forEach(eventName => {
+  dropzone.addEventListener(eventName, highlight, false);
 });
 
-document.querySelector('.file-upload').onchange = function() {
-  if (!this.files.length) return;
-  runUpload(this.files[0]).then(image => {
+['dragleave', 'drop'].forEach(eventName => {
+  dropzone.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight(e) {
+  dropzone.classList.add('dragover');
+}
+
+function unhighlight(e) {
+  dropzone.classList.remove('dragover');
+}
+
+// Handle dropped files
+dropzone.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  if (files.length > 0) {
+    handleFiles(files);
+  }
+}
+
+// Handle file selection
+fileUpload.addEventListener('change', function() {
+  if (this.files.length > 0) {
+    handleFiles(this.files);
+  }
+});
+
+// Click dropzone to trigger file input
+dropzone.addEventListener('click', () => {
+  fileUpload.click();
+});
+
+function handleFiles(files) {
+  if (files.length === 0) return;
+  
+  const file = files[0];
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+
+  // Show loading state
+  loading.classList.add('show');
+  progressBar.style.width = '0%';
+
+  runUpload(file).then(image => {
+    // Clear previous results
     document.querySelector('svg')?.remove();
+    document.querySelector('.pallet').innerHTML = '';
+    
     const width = image.width;
     const height = image.height;
 
@@ -86,43 +168,68 @@ document.querySelector('.file-upload').onchange = function() {
 
     const imageData = ctx.getImageData(0, 0, width, height);
 
-    workBoots.ready().then(() => {
+    console.log('Trying direct WorkBoots usage without ready()...');
+    console.log('workBoots object:', workBoots);
+    console.log('workBoots.ready:', workBoots.ready);
+    
+    // Try direct usage without waiting for ready
+    try {
       workBoots.onMessage(({ data }) => {
         if ('graphNodes' in data) {
           const { graphNodes } = data;
-          const pallet = document.querySelector('.pallet');
-          // for note this is a list of colors NEAREST their centroid
-          graphNodes.forEach(centroid => {
-            // const points = cluster.points.map(c => {
-            //   const [h,s,v] = c;
-            //   return tinycolor({h,s,v});
-            // });
-            //
-            // points.sort((a, b) => a.getBrightness() - b.getBrightness())
-            //const point = points[0];
+          const pallet = document.getElementById('pallet');
+          
+          // Create color palette
+          graphNodes.forEach((centroid, index) => {
             const div = document.createElement("div");
-            div.style.cssText = `background-color: ${centroid.color}; width: 80px; height: 80px;`;
+            div.style.backgroundColor = centroid.color;
+            div.title = centroid.color;
+            
+            // Add click to copy functionality
+            div.addEventListener('click', () => {
+              navigator.clipboard.writeText(centroid.color).then(() => {
+                div.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                  div.style.transform = '';
+                }, 200);
+              });
+            });
 
-            pallet.append(div);
+            pallet.appendChild(div);
           });
 
           const graph = createGraph(graphNodes);
-
-          const { svg, simulation } = generateChart(width, height, graph);
-
-          document.querySelector('.image-container').append(svg);
+          const { svg, simulation, scaleColorNode, resetColorNode } = generateChart(width, height, graph);
+          document.getElementById('image-container').appendChild(svg);
+          
+          // Add hover effects to palette colors
+          const paletteColors = pallet.querySelectorAll('div');
+          paletteColors.forEach((div, index) => {
+            // Add hover listeners to scale corresponding D3 circles
+            div.addEventListener('mouseenter', () => {
+              scaleColorNode(index, 1.5);
+            });
+            
+            div.addEventListener('mouseleave', () => {
+              resetColorNode(index);
+            });
+          });
+          
+          // Hide loading
+          loading.classList.remove('show');
         } else if ('progressUpdate' in data) {
           const { progressUpdate } = data;
-
-          // progress!
-          console.log("... progress!")
+          // Update progress bar
+          if (progressUpdate && typeof progressUpdate === 'number') {
+            progressBar.style.width = `${progressUpdate}%`;
+          }
         }
       });
 
       let iterations = Number(document.querySelector('.iteration-count').value);
-      iterations = (isNaN(iterations) || +iterations === 0) ? 10 : iterations
+      iterations = (isNaN(iterations) || +iterations === 0) ? 10 : iterations;
       let palletSize = Number(document.querySelector('.pallet-size').value);
-      palletSize = (isNaN(palletSize) || +palletSize === 0) ? 10 : palletSize
+      palletSize = (isNaN(palletSize) || +palletSize === 0) ? 10 : palletSize;
 
       workBoots.postMessage({
         imageData: imageData.data,
@@ -131,8 +238,14 @@ document.querySelector('.file-upload').onchange = function() {
         width,
         height
       });
-    });
-
-    console.log(imageData);
+    } catch (error) {
+      console.error('Error with direct WorkBoots usage:', error);
+      loading.classList.remove('show');
+      alert('Error processing image. Please try again.');
+    }
+  }).catch(error => {
+    console.error('Error loading image:', error);
+    loading.classList.remove('show');
+    alert('Error loading image. Please try again.');
   });
 }

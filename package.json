@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "a force directed graph color picker using kmeans clustering",
   "main": "index.js",
+  "homepage": "https://yourusername.github.io/directed-color-picker",
   "author": "john holland",
   "license": "MIT except for marika-boniuk portrait, all copyright belong to Marika Boniuk",
   "dependencies": {
@@ -11,14 +12,20 @@
     "d3": "^6.7.0",
     "d3-force": "^2.1.1",
     "tinycolor2": "^1.4.2",
-    "webpack": "^5.36.2"
+    "webpack": "^5.36.2",
+    "workboots": "^1.1.0"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "html-webpack-plugin": "^5.3.1",
+    "http-server": "^14.1.1",
     "webpack-cli": "^4.7.0"
   },
   "scripts": {
     "build": "webpack",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "serve": "http-server dist -p 8080",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   }
 }

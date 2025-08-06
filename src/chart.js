@@ -114,9 +114,28 @@ function generateChart(width, height, graph) {
     d.fy = clamp(event.y, 0, height);
     simulation.alpha(1).restart();
   }
+  // Add hover scaling functionality for color nodes
+  function scaleColorNode(colorIndex, scale = 1.5) {
+    node
+      .filter(d => d.color && d.index === colorIndex)
+      .transition()
+      .duration(200)
+      .attr("r", 12 * scale);
+  }
+
+  function resetColorNode(colorIndex) {
+    node
+      .filter(d => d.color && d.index === colorIndex)
+      .transition()
+      .duration(200)
+      .attr("r", 12);
+  }
+
   return {
     svg: svg.node(),
-    simulation
+    simulation,
+    scaleColorNode,
+    resetColorNode
   }
 }
 

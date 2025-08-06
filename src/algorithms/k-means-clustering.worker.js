@@ -1,9 +1,57 @@
-import { Socks } from '../util/work-boots';
+// Patch environment detection for work-boots in Web Worker context
+// Work-boots expects window/document for browser detection, but workers only have 'self'
+if (typeof window === 'undefined' && typeof self !== 'undefined') {
+  // Make work-boots think we're in a browser by providing minimal window/document
+  globalThis.window = self;
+  globalThis.document = { }; // Minimal document object
+  console.log('Worker: Patched environment for work-boots browser detection');
+}
+
+const workbootsExports = require('workboots');
+console.log('Worker: Available objects:');
+console.log('self.Socks:', self.Socks);
+console.log('self.WorkBoots:', self.WorkBoots);
+console.log('self.WorkBoots keys:', self.WorkBoots ? Object.keys(self.WorkBoots) : 'undefined');
+
+// Debug environment detection
+console.log('Worker environment detection:');
+console.log('typeof window:', typeof window);
+console.log('typeof document:', typeof document);
+console.log('typeof process:', typeof process);
+console.log('typeof self:', typeof self);
+
+// Try the nested structure like in main thread - use the same pattern as main thread
+const Socks = self.WorkBoots && self.WorkBoots.Socks;
+
+console.log('Worker: About to create Socks instance');
+console.log('Worker: Socks constructor:', Socks);
 import { Sequence } from './sequencer';
 import { kmeans } from './k-means-clustering';
 import tinycolor from 'tinycolor2';
 
-const socks = new Socks({ self });
+// Ensure Socks constructor is available before creating instance
+if (!Socks) {
+  console.error('Worker: Socks constructor not found! Available objects:', {
+    'self.Socks': self.Socks,
+    'self.WorkBoots': self.WorkBoots,
+    'workbootsExports': workbootsExports
+  });
+  throw new Error('Socks constructor not available');
+}
+
+const socks = new Socks(self);
+
+console.log('Worker: Socks instance created:', socks);
+
+//todo: move this to the Socks class constructor, as a warning for missing socks.ready() call
+// easy to do, even if this is cheesy
+// Add timeout warning for missing socks.ready() call
+let readyCalled = false;
+setTimeout(() => {
+  if (!readyCalled) {
+    console.warn('WARNING: socks.ready() was not called within 3000ms! This may cause communication issues.');
+  }
+}, 3000);
 
 socks.onMessage(({ data }) => {
   if ('imageData' in data) {
@@ -12,7 +60,9 @@ socks.onMessage(({ data }) => {
 });
 
 const PROGRESS_UPDATE_STEP = 10;
+let progressCounter = 0;
 const startClustering = ({ imageData, iterations = 10, palletSize = 10, width, height }) => {
+  progressCounter = 0;
   const hsvArray = [];
   const colors = [];
   for (let i = 0; i < imageData.length; i += 4) {
@@ -50,7 +100,9 @@ const startClustering = ({ imageData, iterations = 10, palletSize = 10, width, h
 }
 
 const progressUpdate = () => {
-  socks.postMessage({ progressUpdate: true });
+  progressCounter++;
+  const percentage = Math.min(progressCounter * 2, 99); // Rough progress estimation
+  socks.postMessage({ progressUpdate: percentage });
 }
 
 const v3distance = (v1, v2) => {
@@ -94,6 +146,9 @@ const finished = ({ centroids, imageData, colors }) => {
 
   socks.postMessage({ graphNodes });
 }
+
+socks.ready();
+readyCalled = true;
 
 export {
   socks
