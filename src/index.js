@@ -227,9 +227,9 @@ function handleFiles(files) {
       });
 
       let iterations = Number(document.querySelector('.iteration-count').value);
-      iterations = (isNaN(iterations) || +iterations === 0) ? 10 : iterations;
+      iterations = (isNaN(iterations) || +iterations === 0) ? 4 : iterations;
       let palletSize = Number(document.querySelector('.pallet-size').value);
-      palletSize = (isNaN(palletSize) || +palletSize === 0) ? 10 : palletSize;
+      palletSize = (isNaN(palletSize) || +palletSize === 0) ? 20 : palletSize;
 
       workBoots.postMessage({
         imageData: imageData.data,

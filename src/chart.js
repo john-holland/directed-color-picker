@@ -115,9 +115,10 @@ function generateChart(width, height, graph) {
     simulation.alpha(1).restart();
   }
   // Add hover scaling functionality for color nodes
+  // Color nodes are at even indices (0, 2, 4, 6, ...) in the nodes array
   function scaleColorNode(colorIndex, scale = 1.5) {
     node
-      .filter(d => d.color && d.index === colorIndex)
+      .filter((d, i) => d.color && i === colorIndex * 2)
       .transition()
       .duration(200)
       .attr("r", 12 * scale);
@@ -125,7 +126,7 @@ function generateChart(width, height, graph) {
 
   function resetColorNode(colorIndex) {
     node
-      .filter(d => d.color && d.index === colorIndex)
+      .filter((d, i) => d.color && i === colorIndex * 2)
       .transition()
       .duration(200)
       .attr("r", 12);
