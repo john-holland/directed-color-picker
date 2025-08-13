@@ -18,6 +18,10 @@ module.exports = {
             {
               from: 'src/*.html',
               to: 'index.html'
+            },
+            {
+              from: 'static',
+              to: 'static'
             }
         ]
     })
