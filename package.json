@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "a force directed graph color picker using kmeans clustering",
   "main": "index.js",
-  "homepage": "https://yourusername.github.io/directed-color-picker",
+  "homepage": "https://john-holland.github.io/color-picker",
   "author": "john holland",
   "license": "MIT except for marika-boniuk portrait, all copyright belong to Marika Boniuk",
   "dependencies": {
