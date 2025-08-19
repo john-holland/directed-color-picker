@@ -1,0 +1,32 @@
+{
+    "countries": {
+        "china": {
+            "colors": [{"r": 204, "g": 60, "b": 37}, {"r": 250, "g": 223, "b": 75}],
+            "image": "src/test/china.png"
+        },
+        "england": {
+            "colors": [{"r": 10, "g": 35, "b": 120}, {"r": 255, "g": 255, "b": 255}, {"r": 190, "g": 46, "b": 51}],
+            "image": "src/test/england.png"
+        },
+        "france": {
+            "colors": [{"r": 10, "g": 34, "b": 143}, {"r": 255, "g": 255, "b": 255}, {"r": 218, "g": 63, "b": 65}],
+            "image": "src/test/france.png"
+        },
+        "india": {
+            "colors": [{"r": 241, "g": 158, "b": 75}, {"r": 255, "g": 255, "b": 255}, {"r": 0, "g": 0, "b": 130}, {"r": 62, "g": 134, "b": 39}],
+            "image": "src/test/india.png"
+        },
+        "italy": {
+            "colors": [{"r": 64, "g": 144, "b": 78}, {"r": 255, "g": 255, "b": 255}, {"r": 190, "g": 59, "b": 61}],
+            "image": "src/test/italy.png"
+        },
+        "russia": {
+            "colors": [{"r": 255, "g": 255, "b": 255}, {"r": 21, "g": 56, "b": 160}, {"r": 196, "g": 50, "b": 44}],
+            "image": "src/test/russia.png"
+        },
+        "usa": {
+            "colors": [{"r": 164, "g": 49, "b": 56}, {"r": 255, "g": 255, "b": 255}, {"r": 60, "g": 59, "b": 107}],
+            "image": "src/test/usa.png"
+        }
+    }
+}
