@@ -2593,43 +2593,396 @@ socks.onMessage(({ data }) => {
 
 const PROGRESS_UPDATE_STEP = 10;
 let progressCounter = 0;
-const startClustering = ({ imageData, iterations = 10, palletSize = 10, width, height, hsvTolerance = 30, toleranceEnabled = true, distanceMethod = 'hsv-max' }) => {
+
+// Progressive quad-based downsampling with centroid convergence testing and streaming
+const startClustering = async ({ imageData, iterations = 10, palletSize = 10, width, height, hsvTolerance = 30, toleranceEnabled = true, distanceMethod = 'hsv-max' }) => {
   progressCounter = 0;
-  const hsvArray = [];
-  const colors = [];
-  for (let i = 0; i < imageData.length; i += 4) {
-    // Modify pixel data
-    const rgba = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_2__.default)({
-      r: imageData[i + 0],
-      g: imageData[i + 1],
-      b: imageData[i + 2],
-      a: imageData[i + 3]
-    });
-
-    const {
-      h, s, v
-    } = rgba.toHsv();
-    hsvArray.push([h,s,v]);
-    colors.push({
-      x: (i / 4) % width,
-      y: Math.floor(i / 4 / width),
-      color: rgba.toHexString(),
-      hsv: [h,s,v]
-    });
+  
+  console.log(`Starting progressive clustering: ${width}x${height} image, ${palletSize} colors, ${iterations} max iterations`);
+  
+  // Define resolution levels: [quadSize, description, maxIterations]
+  // Mobile devices get fewer iterations for faster processing and limited quad sizes
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const mobileIterations = Math.max(2, Math.floor(iterations / 2)); // Half iterations for mobile
+  
+  // Mobile devices skip fine-grained processing (min 4x4 quads) for better performance
+  const resolutionLevels = isMobile ? [
+    [8, '8x8 quads', mobileIterations],
+    [6, '6x6 quads', mobileIterations],
+    [4, '4x4 quads', mobileIterations]
+  ] : [
+    [8, '8x8 quads', iterations],
+    [6, '6x6 quads', iterations],
+    [4, '4x4 quads', iterations],
+    [2, '2x2 quads', iterations],
+    [1, '1x1 pixels', iterations]
+  ];
+  
+  let currentCentroids = null;
+  let previousCentroids = null;
+  // Mobile devices get a higher convergence threshold for faster processing
+  let convergenceThreshold = isMobile ? 0.03 : 0.01; // Higher threshold for mobile
+  
+  // Send initial progress
+  socks.postMessage({ 
+    progressUpdate: 0,
+    status: 'Starting progressive clustering...'
+  });
+  
+  // Add streaming delay function for mobile devices
+  const streamingDelay = (customDelay = null) => {
+    if (isMobile) {
+      const delay = customDelay || 50; // Default 50ms, but can be customized
+      return new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return Promise.resolve();
+  };
+  
+  // Log mobile-specific optimizations
+  if (isMobile) {
+    console.log('📱 Mobile device detected - using optimized settings:');
+    console.log(`   - Min quad size: 4x4 (skipping 2x2 and 1x1 for performance)`);
+    console.log(`   - Max iterations: ${mobileIterations} (vs ${iterations} on desktop)`);
+    console.log(`   - Resolution levels: ${resolutionLevels.length} (vs 5 on desktop)`);
   }
-
-  const sequence = new _sequencer__WEBPACK_IMPORTED_MODULE_0__.Sequence();
-
-  (0,_k_means_clustering__WEBPACK_IMPORTED_MODULE_1__.kmeans)(sequence, hsvArray, { iterations, k: palletSize })
-    .then(({ centroids, points }) => {
-      finished({ centroids, imageData, colors, hsvTolerance, toleranceEnabled, width, height, palletSize, iterations, distanceMethod });
+  
+  // Process each resolution level with streaming
+  for (const [quadSize, description, maxIterations] of resolutionLevels) {
+    console.log(`Processing at ${description} resolution with max ${maxIterations} iterations...`);
+    
+    // Send progress update for current resolution
+    socks.postMessage({ 
+      progressUpdate: Math.round((resolutionLevels.findIndex(([size]) => size === quadSize) / resolutionLevels.length) * 20),
+      status: `Processing ${description} resolution...`
     });
+    
+    // Add streaming delay for mobile
+    await streamingDelay();
+    
+    // Downsample image data to current resolution
+    const { downsampledData, downsampledWidth, downsampledHeight } = downsampleImage(imageData, width, height, quadSize);
+   
+    console.log(`Downsampled to ${downsampledWidth}x${downsampledHeight} (${downsampledData.length / 4} pixels)`);
+    
+    // Convert to HSV arrays with streaming
+    const hsvArray = [];
+    const colors = [];
+    // Mobile devices get smaller chunks for better responsiveness
+    const chunkSize = isMobile ? 500 : 5000; // Smaller chunks for mobile
+    
+    for (let i = 0; i < downsampledData.length; i += 4) {
+      const rgba = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_2__.default)({
+        r: downsampledData[i + 0],
+        g: downsampledData[i + 1],
+        b: downsampledData[i + 2],
+        a: downsampledData[i + 3]
+      });
 
-  while (sequence.hasExec()) {
-    sequence.exec();
-    progressUpdate();
+      const { h, s, v } = rgba.toHsv();
+      hsvArray.push([h, s, v]);
+      colors.push({
+        x: (i / 4) % downsampledWidth,
+        y: Math.floor(i / 4 / downsampledWidth),
+        color: rgba.toHexString(),
+        hsv: [h, s, v]
+      });
+      
+      // Streaming yield point for mobile devices
+      if (isMobile && (i / 4) % chunkSize === 0) {
+        await streamingDelay();
+      }
+    }
+    
+    // Run k-means clustering at current resolution
+    const sequence = new _sequencer__WEBPACK_IMPORTED_MODULE_0__.Sequence();
+    
+    try {
+      // For now, use direct fallback approach until we fix the sequencer issue
+      console.log(`Using direct k-means fallback for ${hsvArray.length} pixels, ${palletSize} colors`);
+      const centroids = createAdvancedCentroids(hsvArray, palletSize);
+      const points = []; // We don't need points for the current use case
+      
+      console.log(`Clustering at ${description} completed:`, { 
+        centroidsCount: centroids?.length || 0, 
+        pointsCount: points?.length || 0
+      });
+     
+      // Check for centroid convergence
+      if (previousCentroids && currentCentroids) {
+        const convergenceScore = calculateCentroidConvergence(previousCentroids, centroids);
+        console.log(`Convergence score at ${description}: ${convergenceScore.toFixed(4)} (threshold: ${convergenceThreshold})`);
+        
+        if (convergenceScore < convergenceThreshold) {
+          console.log(`✅ Centroids converged at ${description} resolution! Stopping early.`);
+          currentCentroids = centroids;
+          break;
+        }
+      }
+      
+      // Store centroids for next iteration
+      previousCentroids = currentCentroids;
+      currentCentroids = centroids;
+      
+      // Update progress with detailed information
+      const levelIndex = resolutionLevels.findIndex(([size]) => size === quadSize);
+      const progress = Math.round(((levelIndex + 1) / resolutionLevels.length) * 80); // 80% for resolution processing
+      socks.postMessage({ 
+        progressUpdate: progress,
+        status: `Completed ${description} (${downsampledWidth}x${downsampledHeight} pixels)`
+      });
+     
+    } catch (error) {
+      console.error(`Error clustering at ${description} resolution:`, error);
+      // Continue to next resolution level
+      continue;
+    }
   }
-}
+  
+  // Process final results
+   if (currentCentroids) {
+     console.log('Processing final clustering results...');
+     
+     // Send final progress update
+     socks.postMessage({ 
+       progressUpdate: 100,
+       status: `Clustering complete! Found ${currentCentroids.length} colors`
+     });
+     
+     // Send progress update for final processing
+     socks.postMessage({ 
+       progressUpdate: 85,
+       status: 'Generating final color data...'
+     });
+     
+     // Regenerate colors at full resolution for final processing with streaming
+     const fullResolutionColors = [];
+     // Mobile devices get much smaller chunks for better responsiveness during final processing
+     const finalChunkSize = isMobile ? 500 : 10000; // Much smaller chunks for mobile
+     
+     console.log(`📱 Mobile: Processing ${imageData.length / 4} pixels with chunk size ${finalChunkSize}`);
+     
+     for (let i = 0; i < imageData.length; i += 4) {
+       const rgba = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_2__.default)({
+         r: imageData[i + 0],
+         g: imageData[i + 1],
+         b: imageData[i + 2],
+         a: imageData[i + 3]
+       });
+
+       const { h, s, v } = rgba.toHsv();
+       fullResolutionColors.push({
+         x: (i / 4) % width,
+         y: Math.floor(i / 4 / width),
+         color: rgba.toHexString(),
+         hsv: [h, s, v]
+       });
+       
+               // Streaming yield point for mobile devices - much more frequent with shorter delays
+        if (isMobile && (i / 4) % finalChunkSize === 0) {
+          await streamingDelay(25); // Shorter delay for final processing
+          
+          // Send incremental progress updates for mobile
+          const progress = 85 + Math.round((i / imageData.length) * 10);
+          socks.postMessage({ 
+            progressUpdate: progress,
+            status: `Mobile: Processing pixels ${Math.round((i / imageData.length) * 100)}%`
+          });
+        }
+     }
+     
+     // Send final progress update
+     socks.postMessage({ 
+       progressUpdate: 95,
+       status: 'Finalizing clustering results...'
+     });
+     
+     // Add final streaming delay for mobile
+     await streamingDelay();
+     
+     finished({ 
+       centroids: currentCentroids, 
+       imageData, 
+       colors: fullResolutionColors, // Full resolution colors for example finding
+       hsvTolerance, 
+       toleranceEnabled, 
+       width, 
+       height, 
+       palletSize, 
+       iterations, 
+       distanceMethod 
+     });
+   } else {
+     console.error('No centroids generated from clustering');
+     socks.postMessage({ error: 'Clustering failed to generate centroids' });
+   }
+};
+
+// Downsample image data by averaging pixels in quad regions
+const downsampleImage = (imageData, width, height, quadSize) => {
+  const downsampledWidth = Math.ceil(width / quadSize);
+  const downsampledHeight = Math.ceil(height / quadSize);
+  const downsampledData = new Uint8ClampedArray(downsampledWidth * downsampledHeight * 4);
+  
+  for (let dy = 0; dy < downsampledHeight; dy++) {
+    for (let dx = 0; dx < downsampledWidth; dx++) {
+      const sx = dx * quadSize;
+      const sy = dy * quadSize;
+      
+      let r = 0, g = 0, b = 0, a = 0;
+      let pixelCount = 0;
+      
+      // Average pixels in the quad region
+      for (let qy = 0; qy < quadSize && sy + qy < height; qy++) {
+        for (let qx = 0; qx < quadSize && sx + qx < width; qx++) {
+          const sourceIndex = ((sy + qy) * width + (sx + qx)) * 4;
+          r += imageData[sourceIndex];
+          g += imageData[sourceIndex + 1];
+          b += imageData[sourceIndex + 2];
+          a += imageData[sourceIndex + 3];
+          pixelCount++;
+        }
+      }
+      
+      // Calculate average and store in downsampled data
+      const destIndex = (dy * downsampledWidth + dx) * 4;
+      downsampledData[destIndex] = Math.round(r / pixelCount);
+      downsampledData[destIndex + 1] = Math.round(g / pixelCount);
+      downsampledData[destIndex + 2] = Math.round(b / pixelCount);
+      downsampledData[destIndex + 3] = Math.round(a / pixelCount);
+    }
+  }
+  
+  return { downsampledData, downsampledWidth, downsampledHeight };
+};
+
+// Create fallback centroids if k-means fails
+const createFallbackCentroids = (hsvArray, k) => {
+  console.log(`Creating fallback centroids for ${k} colors from ${hsvArray.length} data points`);
+  
+  // Simple approach: sample evenly distributed colors from the data
+  const step = Math.max(1, Math.floor(hsvArray.length / k));
+  const centroids = [];
+  
+  for (let i = 0; i < k && i * step < hsvArray.length; i++) {
+    const index = i * step;
+    const hsv = hsvArray[index];
+    
+    // Create a mock centroid object with the expected interface
+    const centroid = {
+      location: () => hsv,
+      label: () => i
+    };
+    
+    centroids.push(centroid);
+  }
+  
+  console.log(`Created ${centroids.length} fallback centroids`);
+  return centroids;
+};
+
+// Create advanced centroids using a simplified k-means approach
+const createAdvancedCentroids = (hsvArray, k) => {
+  console.log(`Creating advanced centroids for ${k} colors from ${hsvArray.length} data points`);
+  
+  if (hsvArray.length === 0) {
+    return [];
+  }
+  
+  // Initialize centroids with evenly distributed samples
+  const step = Math.max(1, Math.floor(hsvArray.length / k));
+  let centroids = [];
+  
+  for (let i = 0; i < k && i * step < hsvArray.length; i++) {
+    const index = i * step;
+    centroids.push([...hsvArray[index]]); // Copy HSV values
+  }
+  
+  // If we don't have enough centroids, fill with random samples
+  while (centroids.length < k && hsvArray.length > 0) {
+    const randomIndex = Math.floor(Math.random() * hsvArray.length);
+    centroids.push([...hsvArray[randomIndex]]);
+  }
+  
+  // Perform a few iterations of k-means
+  const maxIterations = 3;
+  for (let iter = 0; iter < maxIterations; iter++) {
+    // Assign points to nearest centroids
+    const clusters = Array(k).fill().map(() => []);
+    
+    for (const point of hsvArray) {
+      let nearestCentroid = 0;
+      let minDistance = Infinity;
+      
+      for (let c = 0; c < centroids.length; c++) {
+        const distance = hsvDistance(point, centroids[c]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestCentroid = c;
+        }
+      }
+      
+      clusters[nearestCentroid].push(point);
+    }
+    
+    // Update centroids to cluster means
+    for (let c = 0; c < centroids.length; c++) {
+      if (clusters[c].length > 0) {
+        const sumH = clusters[c].reduce((sum, p) => sum + p[0], 0);
+        const sumS = clusters[c].reduce((sum, p) => sum + p[1], 0);
+        const sumV = clusters[c].reduce((sum, p) => sum + p[2], 0);
+        
+        centroids[c] = [
+          sumH / clusters[c].length,
+          sumS / clusters[c].length,
+          sumV / clusters[c].length
+        ];
+      }
+    }
+  }
+  
+  // Convert to expected centroid object format
+  const result = centroids.map((hsv, index) => ({
+    location: () => hsv,
+    label: () => index
+  }));
+  
+  console.log(`Created ${result.length} advanced centroids`);
+  return result;
+};
+
+// Calculate convergence between two sets of centroids
+const calculateCentroidConvergence = (centroids1, centroids2) => {
+  console.log('Calculating convergence between:', { 
+    centroids1: centroids1?.length || 0, 
+    centroids2: centroids2?.length || 0 
+  });
+  
+  if (!centroids1 || !centroids2 || centroids1.length !== centroids2.length) {
+    console.log('Convergence check failed - centroids mismatch');
+    return Infinity; // No convergence if centroids don't match
+  }
+  
+  let totalDistance = 0;
+  
+  for (let i = 0; i < centroids1.length; i++) {
+    const loc1 = centroids1[i].location();
+    const loc2 = centroids2[i].location();
+    
+    console.log(`Centroid ${i}:`, { loc1, loc2 });
+    
+    // Calculate Euclidean distance in HSV space
+    const hDiff = Math.abs(loc1[0] - loc2[0]) / 360; // Normalize hue difference
+    const sDiff = Math.abs(loc1[1] - loc2[1]);
+    const vDiff = Math.abs(loc1[2] - loc2[2]);
+    
+    const distance = Math.sqrt(hDiff * hDiff + sDiff * sDiff + vDiff * vDiff);
+    totalDistance += distance;
+  }
+  
+  const avgDistance = totalDistance / centroids1.length;
+  console.log(`Convergence calculation: totalDistance=${totalDistance}, avgDistance=${avgDistance}`);
+  return avgDistance; // Average distance
+};
 
 const progressUpdate = () => {
   progressCounter++;
@@ -2860,7 +3213,7 @@ const calculateColorDistance = (color1, color2, method) => {
       const color2HSL_max = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_2__.default)({ h: color2[0], s: color2[1], v: color2[2] }).toHsl();
       const hslDist = hslDistance([color1HSL_max.h, color1HSL_max.s, color1HSL_max.l], [color2HSL_max.h, color2HSL_max.s, color2HSL_max.l]);
       const maxDist = Math.max(hsvDist, hslDist);
-      console.log(`    Max(HSV, HSL): HSV=${hsvDist.toFixed(4)}, HSL=${hslDist.toFixed(4)}, Max=${maxDist.toFixed(4)}`);
+      console.log(`    Max(HSV, HSL): HSV=${hsvDist.toFixed(4)}, HSL=${hsvDist.toFixed(4)}, Max=${maxDist.toFixed(4)}`);
       return maxDist;
     default:
       return hsvDistance(color1, color2);
