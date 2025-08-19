@@ -53304,10 +53304,16 @@ function processImage() {
     return;
   }
 
-  // Show loading state
+    // Show loading state
   loading.classList.add('show');
   progressBar.style.width = '0%';
-
+  
+  // Clear status
+  const statusElement = document.getElementById('processing-status');
+  if (statusElement) {
+    statusElement.textContent = 'Initializing...';
+  }
+  
   // Clear previous results
   document.querySelector('svg')?.remove();
   document.querySelector('.pallet').innerHTML = '';
@@ -53375,13 +53381,20 @@ function processImage() {
         
         // Hide loading
         loading.classList.remove('show');
-      } else if ('progressUpdate' in data) {
-        const { progressUpdate } = data;
-        // Update progress bar
-        if (progressUpdate && typeof progressUpdate === 'number') {
-          progressBar.style.width = `${progressUpdate}%`;
-        }
-      }
+               } else if ('progressUpdate' in data) {
+           const { progressUpdate, status } = data;
+           // Update progress bar
+           if (progressUpdate && typeof progressUpdate === 'number') {
+             progressBar.style.width = `${progressUpdate}%`;
+           }
+           // Update status message if provided
+           if (status) {
+             const statusElement = document.getElementById('processing-status');
+             if (statusElement) {
+               statusElement.textContent = status;
+             }
+           }
+         }
     });
 
     let iterations = Number(document.querySelector('.iteration-count').value);

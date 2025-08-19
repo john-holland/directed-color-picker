@@ -324,6 +324,15 @@
         transition: width 0.3s ease;
       }
 
+      .processing-status {
+        text-align: center;
+        font-size: 0.9em;
+        color: #555;
+        margin: 8px 0;
+        font-weight: 500;
+        min-height: 1.2em;
+      }
+
       /* Coffee Accordion Styles */
       .coffee-accordion {
         margin-top: 30px;
@@ -742,6 +751,7 @@
 
       <div class="loading" id="loading">
         <div>Processing image...</div>
+        <div id="processing-status" class="processing-status">Initializing...</div>
         <div class="progress">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
