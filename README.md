@@ -13,13 +13,13 @@ A force-directed graph color picker that uses K-means clustering to extract colo
 
 ## Live Demo
 
-Visit the live application: [https://yourusername.github.io/directed-color-picker](https://yourusername.github.io/directed-color-picker)
+Visit the live application: [https://john-holland.github.io/color-picker](https://john-holland.github.io/color-picker)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/directed-color-picker.git
+git clone https://github.com/john-holland/directed-color-picker.git
 cd directed-color-picker
 ```
 
