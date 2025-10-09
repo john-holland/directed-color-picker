@@ -840,34 +840,51 @@ function loadSavedPalette(index) {
 }
 
 function resetPalette() {
-  if (confirm('Are you sure you want to reset the palette to its original state?')) {
-    if (originalPalette.length > 0) {
-      currentPalette = [...originalPalette];
+  if (confirm('Are you sure you want to reset the working palette to the original generated palette?')) {
+    if (mainPalette.length > 0) {
+      // Reset working palette to match main palette
+      workingPalette = [...mainPalette];
+      currentPalette = [...mainPalette]; // Keep for backward compatibility
       selectedColors = [];
       updateActivePaletteDisplay();
-      updatePaletteDisplay();
+      // Don't update main palette display - it should stay the same
       
-              // RobotCopy temporarily disabled for testing
-        // try {
-        //   robotCopy.sendMessage('PALETTE_RESET', {
-        //     originalSize: originalPalette.length
-        //   });
-        // } catch (error) {
-        //   console.log('RobotCopy message skipped:', error.message);
-        // }
+      // Show success message
+      const copyStatus = document.getElementById('copy-status');
+      copyStatus.textContent = '✅ Palette reset!';
+      setTimeout(() => {
+        copyStatus.textContent = '';
+      }, 2000);
+      
+      // RobotCopy temporarily disabled for testing
+      // try {
+      //   robotCopy.sendMessage('PALETTE_RESET', {
+      //     originalSize: mainPalette.length
+      //   });
+      // } catch (error) {
+      //   console.log('RobotCopy message skipped:', error.message);
+      // }
     } else {
-      alert('No original palette to reset to.');
+      alert('No original palette to reset to. Please run the analysis first.');
     }
   }
 }
 
 function clearPalette() {
-  if (confirm('Are you sure you want to clear all colors from the palette?')) {
-    const clearedCount = currentPalette.length;
-    currentPalette = [];
+  if (confirm('Are you sure you want to clear all colors from the working palette?')) {
+    const clearedCount = workingPalette.length;
+    workingPalette = [];
+    currentPalette = []; // Keep for backward compatibility
     selectedColors = [];
     updateActivePaletteDisplay();
-    updatePaletteDisplay();
+    // Don't update main palette display - keep it separate
+    
+    // Show success message
+    const copyStatus = document.getElementById('copy-status');
+    copyStatus.textContent = '✅ Palette cleared!';
+    setTimeout(() => {
+      copyStatus.textContent = '';
+    }, 2000);
     
     // RobotCopy temporarily disabled for testing
     // try {
@@ -877,6 +894,38 @@ function clearPalette() {
     // } catch (error) {
     //   console.log('RobotCopy message skipped:', error.message);
     // }
+  }
+}
+
+function duplicatePalette() {
+  if (workingPalette.length === 0) {
+    alert('No colors in the palette to duplicate.');
+    return;
+  }
+  
+  if (confirm(`This will duplicate all ${workingPalette.length} colors in the palette. Continue?`)) {
+    // Create a deep copy of all colors in the working palette
+    const duplicatedColors = workingPalette.map(color => ({
+      hex: color.hex,
+      rgb: { ...color.rgb },
+      hsv: { ...color.hsv },
+      source: `${color.source}-duplicate`
+    }));
+    
+    // Add the duplicated colors to the working palette
+    workingPalette = [...workingPalette, ...duplicatedColors];
+    currentPalette = [...workingPalette]; // Keep for backward compatibility
+    selectedColors = []; // Clear selection
+    updateActivePaletteDisplay();
+    
+    // Show success message
+    const copyStatus = document.getElementById('copy-status');
+    copyStatus.textContent = `✅ Palette duplicated! Added ${duplicatedColors.length} colors.`;
+    setTimeout(() => {
+      copyStatus.textContent = '';
+    }, 2000);
+    
+    console.log('Palette duplicated:', duplicatedColors.length, 'colors added');
   }
 }
 
@@ -1380,6 +1429,11 @@ function initializePaletteManagement() {
   const clearPaletteBtn = document.getElementById('clear-palette-btn');
   if (clearPaletteBtn) {
     clearPaletteBtn.addEventListener('click', clearPalette);
+  }
+  
+  const duplicatePaletteBtn = document.getElementById('duplicate-palette-btn');
+  if (duplicatePaletteBtn) {
+    duplicatePaletteBtn.addEventListener('click', duplicatePalette);
   }
   
   // Color theory buttons

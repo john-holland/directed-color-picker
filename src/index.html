@@ -891,7 +891,7 @@
         display: none;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
+        z-index: 10000;
       }
 
       .color-picker-content {
@@ -1253,7 +1253,7 @@
       }
     </style>
   </head>
-  <body ondragstart="return false;">
+  <body>
     <div class="container">
       <h1>🎨 Directed Color Picker</h1>
       
@@ -1357,6 +1357,7 @@
           <h4>✏️ Edit Active Palette</h4>
           <div class="palette-controls">
             <button id="add-custom-color-btn" class="palette-control-btn">➕ Add Custom Color</button>
+            <button id="duplicate-palette-btn" class="palette-control-btn">📋 Duplicate Palette</button>
             <button id="reset-palette-btn" class="palette-control-btn">🔄 Reset Palette</button>
             <button id="clear-palette-btn" class="palette-control-btn">🗑️ Clear All</button>
           </div>
