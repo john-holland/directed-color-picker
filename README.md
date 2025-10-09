@@ -4,7 +4,7 @@ A force-directed graph color picker that uses K-means clustering to extract colo
 
 ## Features
 
-- **Image Upload**: Drag and drop or select images (PNG, JPG, JPEG, GIF, BMP)
+- **Image Upload**: Drag and drop or select images (PNG, JPG, JPEG, GIF, BMP, WebP)
 - **K-means Clustering**: Automatically extracts dominant colors using configurable parameters
 - **Force-Directed Visualization**: Interactive D3.js graph showing color relationships
 - **Background Processing**: Uses Web Workers for non-blocking image processing

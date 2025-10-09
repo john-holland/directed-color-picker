@@ -5,6 +5,7 @@ function clamp(x, lo, hi) {
   return x < lo ? lo : x > hi ? hi : x;
 }
 
+
 /**
   node = {
     x: 0,
@@ -22,8 +23,8 @@ function createGraph(nodes = []) {
       //  but for now we'll just add a diagonal
       const colorNode = {
         index: i,
-        x: c.x + 50,
-        y: c.y + 50,
+        x: c.x,
+        y: c.y,
         vy: Math.random() * 10,
         vx: Math.random() * 10,
         color: c.color
