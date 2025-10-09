@@ -198,6 +198,21 @@
       .upload-hint {
         color: #7f8c8d;
         font-size: 0.9em;
+        margin-bottom: 8px;
+      }
+
+      .format-support {
+        color: #27ae60;
+        font-size: 0.8em;
+        background: rgba(39, 174, 96, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 15px;
+      }
+
+      .format-support strong {
+        color: #2ecc71;
       }
 
       .pallet {
@@ -236,6 +251,7 @@
         align-items: center;
         justify-content: center;
         cursor: crosshair;
+        padding: 0;
       }
 
       .image-container.has-image {
@@ -290,10 +306,13 @@
       svg {
         position: absolute;
         z-index: 1000;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
       }
 
       .loading {
@@ -661,6 +680,534 @@
         transform: translateY(0);
       }
 
+      /* Palette Management Styles */
+      .palette-management {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .palette-management h3 {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      .copy-palette-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .copy-palette-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #4CAF50 0%, #28a745 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+      }
+
+      .copy-palette-btn:hover {
+        background: linear-gradient(135deg, #388e3c 0%, #27ae60 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+      }
+
+      .copy-palette-btn:active {
+        transform: translateY(0);
+      }
+
+      .copy-status {
+        font-size: 14px;
+        color: #28a745;
+        font-weight: 600;
+      }
+
+      .saved-palettes-section {
+        margin-bottom: 20px;
+      }
+
+      .saved-palettes-section h4 {
+        text-align: center;
+        color: #34495e;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .saved-palettes-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .saved-palette-item {
+        background: #e0e0e0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .saved-palette-item:hover {
+        background: #d0d0d0;
+        border-color: #bbb;
+      }
+
+      .active-palette-editor {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .active-palette-editor h4 {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .palette-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .palette-control-btn {
+        padding: 8px 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .palette-control-btn:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4b90 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .palette-control-btn:active {
+        transform: translateY(0);
+      }
+
+      .active-palette-colors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .color-theory-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .theory-btn {
+        padding: 8px 15px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+      }
+
+      .theory-btn:hover {
+        background: linear-gradient(135deg, #ff5252 0%, #d63031 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(255, 107, 107, 0.4);
+      }
+
+      .theory-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Test Button Styles */
+      .test-btn {
+        padding: 8px 15px;
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(155, 89, 182, 0.3);
+        margin: 0 5px;
+      }
+
+      .test-btn:hover {
+        background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(155, 89, 182, 0.4);
+      }
+
+      .test-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Color Picker Modal Styles */
+      .color-picker-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .color-picker-content {
+        background: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 400px;
+        position: relative;
+      }
+
+      /* Mobile Warning Styles */
+      .mobile-warning {
+        display: none;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+        animation: pulse 2s infinite;
+      }
+
+      .mobile-warning.show {
+        display: block;
+      }
+
+      .mobile-warning-icon {
+        font-size: 1.2em;
+        margin-right: 8px;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+      }
+
+      .color-picker-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .color-picker-header h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.8em;
+      }
+
+      .close-modal-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #667eea;
+        transition: color 0.3s ease;
+      }
+
+      .close-modal-btn:hover {
+        color: #5a6fd8;
+      }
+
+      .color-picker-body {
+        margin-bottom: 20px;
+      }
+
+      .color-input-section {
+        margin-bottom: 15px;
+      }
+
+      .color-input-section label {
+        display: block;
+        margin-bottom: 5px;
+        color: #34495e;
+        font-weight: 600;
+        font-size: 0.9em;
+      }
+
+      .color-input-section input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+
+      .color-input-section input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .color-preview {
+        width: 100%;
+        height: 100px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ccc;
+      }
+
+      .color-preview.invalid {
+        border-color: #ff6b6b;
+        background: #ffe0e0;
+      }
+
+      .color-preview.valid {
+        border-color: #4CAF50;
+        background: #e8f5e9;
+      }
+
+      .color-preview.invalid .color-preview-text {
+        color: #ff6b6b;
+      }
+
+      .color-preview.valid .color-preview-text {
+        color: #4CAF50;
+      }
+
+      .color-preview-text {
+        font-size: 1.2em;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .color-sliders {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .slider-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .slider-group label {
+        font-size: 0.9em;
+        color: #34495e;
+        font-weight: 600;
+      }
+
+      .slider-group input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 4px;
+        outline: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+
+      .slider-group input[type="range"]:hover {
+        opacity: 1;
+      }
+
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .slider-group input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #667eea;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .color-picker-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .add-color-btn,
+      .cancel-color-btn {
+        flex: 1;
+        padding: 10px 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .add-color-btn:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4b90 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .add-color-btn:active {
+        transform: translateY(0);
+      }
+
+      .cancel-color-btn {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+      }
+
+      .cancel-color-btn:hover {
+        background: linear-gradient(135deg, #d63031 0%, #c0392b 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(255, 107, 107, 0.4);
+      }
+
+      .cancel-color-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Palette Color Display Styles */
+      .palette-color-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      }
+
+      .palette-color-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .palette-color-item.selected {
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 3px #667eea;
+      }
+
+      .palette-color-item .remove-color {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 20px;
+        height: 20px;
+        background: #ff6b6b;
+        border: 2px solid white;
+        border-radius: 50%;
+        color: white;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .palette-color-item:hover .remove-color {
+        opacity: 1;
+      }
+
+      .palette-color-item .remove-color:hover {
+        background: #ff5252;
+        transform: scale(1.1);
+      }
+
+      .saved-palette-item {
+        background: #e0e0e0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .saved-palette-item:hover {
+        background: #d0d0d0;
+        border-color: #bbb;
+      }
+
+      .saved-palette-item.selected {
+        background: #667eea;
+        color: white;
+        border-color: #5a6fd8;
+      }
+
       @media (max-width: 768px) {
         .container {
           padding: 20px;
@@ -684,12 +1231,37 @@
         .coffee-image {
           max-width: 250px;
         }
+        
+        .palette-management {
+          padding: 15px;
+        }
+        
+        .palette-controls {
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .color-theory-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .color-picker-content {
+          width: 95%;
+          padding: 20px;
+        }
       }
     </style>
   </head>
   <body ondragstart="return false;">
     <div class="container">
       <h1>🎨 Directed Color Picker</h1>
+      
+      <!-- Mobile Warning -->
+      <div id="mobile-warning" class="mobile-warning">
+        <span class="mobile-warning-icon">⚠️</span>
+        Warning: Processing could take a minute or two on mobile browsers
+      </div>
       
       <div class="controls">
         <div class="control-group">
@@ -746,6 +1318,7 @@
       <div class="dropzone" id="dropzone">
         <div class="upload-text">📁 Upload Image</div>
         <div class="upload-hint">Drag & drop or click to select</div>
+        <div class="format-support">✅ Supports: PNG, JPG, JPEG, GIF, BMP, <strong>WebP</strong>, <strong>AVIF</strong></div>
         <input type="file" class="file-upload" accept="image/*" />
       </div>
 
@@ -761,6 +1334,84 @@
 
       <div class="image-container" id="image-container">
         <canvas class="image-canvas" />
+      </div>
+
+      <!-- Palette Management Section -->
+      <div class="palette-management" id="palette-management" style="display: none;">
+        <h3>🎨 Palette Management</h3>
+        
+        <!-- Copy Palette Button -->
+        <div class="copy-palette-section">
+          <button id="copy-palette-btn" class="copy-palette-btn">📋 Copy Current Palette</button>
+          <span id="copy-status" class="copy-status"></span>
+        </div>
+
+        <!-- Saved Palettes -->
+        <div class="saved-palettes-section">
+          <h4>💾 Saved Palettes</h4>
+          <div id="saved-palettes-list" class="saved-palettes-list"></div>
+        </div>
+
+        <!-- Active Palette Editor -->
+        <div class="active-palette-editor">
+          <h4>✏️ Edit Active Palette</h4>
+          <div class="palette-controls">
+            <button id="add-custom-color-btn" class="palette-control-btn">➕ Add Custom Color</button>
+            <button id="reset-palette-btn" class="palette-control-btn">🔄 Reset Palette</button>
+            <button id="clear-palette-btn" class="palette-control-btn">🗑️ Clear All</button>
+          </div>
+          
+          <div class="active-palette-colors" id="active-palette-colors"></div>
+          
+                  <div class="color-theory-buttons">
+          <button id="split-complements-btn" class="theory-btn">🎭 Split Complements</button>
+          <button id="component-triads-btn" class="theory-btn">🔺 Component Triads</button>
+          <button id="component-quads-btn" class="theory-btn">⬜ Component Quads</button>
+        </div>
+        </div>
+      </div>
+
+      <!-- Test Palette Button (Development Tool) -->
+      <div style="margin-top: 30px; text-align: center;">
+        <button id="create-test-palette-btn" class="test-btn">🧪 Create Test Palette</button>
+      </div>
+
+      <!-- Color Picker Modal -->
+      <div id="color-picker-modal" class="color-picker-modal">
+        <div class="color-picker-content">
+          <div class="color-picker-header">
+            <h3>🎨 Add Custom Color</h3>
+            <button id="close-color-picker" class="close-modal-btn">&times;</button>
+          </div>
+          <div class="color-picker-body">
+            <div class="color-input-section">
+              <label for="hex-color-input">Hex Color:</label>
+              <input type="text" id="hex-color-input" placeholder="#ff0000" maxlength="7">
+            </div>
+            <div class="color-preview" id="color-preview"></div>
+            <div class="color-sliders">
+              <div class="slider-group">
+                <label for="red-slider">Red:</label>
+                <input type="range" id="red-slider" min="0" max="255" value="255">
+                <span id="red-value">255</span>
+              </div>
+              <div class="slider-group">
+                <label for="green-slider">Green:</label>
+                <input type="range" id="green-slider" min="0" max="255" value="0">
+                <span id="green-value">0</span>
+              </div>
+              <div class="slider-group">
+                <label for="blue-slider">Blue:</label>
+                <input type="range" id="blue-slider" min="0" max="255" value="0">
+                <span id="blue-value">0</span>
+              </div>
+            </div>
+            <div class="color-picker-actions">
+              <button id="add-color-btn" class="add-color-btn">Add Color</button>
+              <button id="cancel-color-btn" class="cancel-color-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Buy Me A Coffee Accordion -->
