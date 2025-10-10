@@ -3,15 +3,10 @@ import d3 from 'd3';
 import tinycolor from 'tinycolor2';
 import clusters from 'clusters';
 import { createGraph, generateChart } from './chart.js';
-
-// Import log-view-machine for state management
-// Temporarily comment out log-view-machine imports to test color picker
-// import { 
-//   ViewStateMachine, 
-//   createViewStateMachine, 
-//   createProxyRobotCopyStateMachine,
-//   RobotCopy
-// } from '../../log-view-machine/log-view-machine/dist/index.esm.js';
+import { interpret } from 'xstate';
+import { paletteStateMachine } from './state/paletteStateMachine.js';
+import { PaletteManager } from './business/paletteManager.js';
+import { UIController } from './view/uiController.js';
 
 const workbootsExports = require('workboots');
 console.log('Constructor found! Using window.WorkBoots.WorkBoots');
@@ -78,6 +73,18 @@ let originalPalette = []; // Store original palette for reset functionality
 // Separate palette arrays
 let mainPalette = []; // Main palette below the image (original generated colors)
 let workingPalette = []; // Working palette in the management section (for experiments)
+
+// Initialize state machines and business logic
+const paletteService = interpret(paletteStateMachine);
+const paletteManager = new PaletteManager(paletteService);
+let uiController = null; // Will be initialized after DOM is ready
+
+// Start the palette state machine
+paletteService.onTransition(state => {
+  console.log('Palette State:', state.value, state.context);
+});
+
+paletteService.start();
 
 // Check WebP and AVIF support
 function checkWebPSupport() {
@@ -768,15 +775,63 @@ function updateSavedPalettesList() {
   savedPalettes.forEach((palette, index) => {
     const paletteItem = document.createElement('div');
     paletteItem.className = 'saved-palette-item';
-    paletteItem.textContent = `Palette ${index + 1} (${palette.colors.length} colors)`;
     paletteItem.title = `Created: ${new Date(palette.timestamp).toLocaleString()}`;
     
-    paletteItem.addEventListener('click', () => {
+    // Create text span
+    const textSpan = document.createElement('span');
+    textSpan.className = 'saved-palette-item-text';
+    textSpan.textContent = `Palette ${index + 1} (${palette.colors.length} colors)`;
+    
+    // Create delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-palette-btn';
+    deleteBtn.textContent = '×';
+    deleteBtn.title = 'Delete this palette';
+    
+    // Delete button click handler
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent triggering the palette load
+      deleteSavedPalette(index);
+    });
+    
+    // Text span click handler (load palette)
+    textSpan.addEventListener('click', () => {
       loadSavedPalette(index);
     });
     
+    paletteItem.appendChild(textSpan);
+    paletteItem.appendChild(deleteBtn);
     savedPalettesList.appendChild(paletteItem);
   });
+}
+
+function deleteSavedPalette(index) {
+  if (index >= 0 && index < savedPalettes.length) {
+    const palette = savedPalettes[index];
+    if (confirm(`Delete Palette ${index + 1} (${palette.colors.length} colors)?\n\nThis action cannot be undone.`)) {
+      // Use business logic layer
+      paletteManager.deleteSavedPalette(index);
+      
+      // Update local reference
+      savedPalettes = paletteManager.loadSavedPalettes();
+      updateSavedPalettesList();
+      
+      // Show success message through UI controller if available
+      if (uiController) {
+        uiController.showSuccess('🗑️ Palette deleted!');
+      } else {
+        const copyStatus = document.getElementById('copy-status');
+        if (copyStatus) {
+          copyStatus.textContent = '🗑️ Palette deleted!';
+          setTimeout(() => {
+            copyStatus.textContent = '';
+          }, 2000);
+        }
+      }
+      
+      console.log('Palette deleted:', index);
+    }
+  }
 }
 
 function saveCurrentPalette() {
@@ -1295,6 +1350,10 @@ function createTestPalette() {
 
 // Coffee Accordion Functionality
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize UI Controller with business logic
+  uiController = new UIController(paletteManager);
+  console.log('UI Controller initialized');
+  
   // Initialize palette management event listeners
   initializePaletteManagement();
   
