@@ -61530,4 +61530,4 @@ function initializePaletteManagement() {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle.js.map
+//# sourceMappingURL=app.js.map
