@@ -1,12 +1,13 @@
 import d3_force from 'd3-force';
-import d3 from 'd3';
+import * as d3 from 'd3';
 import tinycolor from 'tinycolor2';
 import clusters from 'clusters';
 import { createGraph, generateChart } from './chart.js';
-import { interpret } from 'xstate';
+import { createActor } from 'xstate';
 import { paletteStateMachine } from './state/paletteStateMachine.js';
 import { PaletteManager } from './business/paletteManager.js';
 import { UIController } from './view/uiController.js';
+import { ColorPickerModal } from './view/colorPickerModal.js';
 
 const workbootsExports = require('workboots');
 console.log('Constructor found! Using window.WorkBoots.WorkBoots');
@@ -75,16 +76,73 @@ let mainPalette = []; // Main palette below the image (original generated colors
 let workingPalette = []; // Working palette in the management section (for experiments)
 
 // Initialize state machines and business logic
-const paletteService = interpret(paletteStateMachine);
-const paletteManager = new PaletteManager(paletteService);
-let uiController = null; // Will be initialized after DOM is ready
-
-// Start the palette state machine
-paletteService.onTransition(state => {
-  console.log('Palette State:', state.value, state.context);
+const paletteActor = createActor(paletteStateMachine, {
+  actors: {
+    savePalette: async () => {
+      try {
+        // Use the global currentPalette and savedPalettes variables
+        const currentSavedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        const paletteData = {
+          colors: [...currentPalette],
+          timestamp: new Date().toISOString(),
+          name: `Palette ${currentSavedPalettes.length + 1}`
+        };
+        
+        const allPalettes = [...currentSavedPalettes, paletteData];
+        localStorage.setItem('savedPalettes', JSON.stringify(allPalettes));
+        
+        // Update global variable
+        savedPalettes = allPalettes;
+        
+        return paletteData;
+      } catch (error) {
+        console.error('Error saving palette:', error);
+        throw error;
+      }
+    },
+    
+    exportPalette: async () => {
+      try {
+        // Use the global currentPalette variable
+        const exportData = {
+          palette: currentPalette,
+          exportDate: new Date().toISOString(),
+          imageDimensions: {
+            width: currentImageWidth,
+            height: currentImageHeight
+          }
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `color-palette-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        
+        return { success: true };
+      } catch (error) {
+        console.error('Error exporting palette:', error);
+        throw error;
+      }
+    }
+  }
 });
 
-paletteService.start();
+const paletteManager = new PaletteManager(paletteActor);
+let uiController = null; // Will be initialized after DOM is ready
+
+// Initialize color picker modal
+const colorPickerModal = new ColorPickerModal();
+
+// Subscribe to state changes
+paletteActor.subscribe(snapshot => {
+  console.log('Palette State:', snapshot.value, snapshot.context);
+});
+
+// Start the palette state machine
+paletteActor.start();
 
 // Check WebP and AVIF support
 function checkWebPSupport() {
@@ -335,6 +393,9 @@ let currentImageHeight = null;
 let currentPalette = []; // Store current palette colors
 let canvas = null;
 let ctx = null;
+let d3Simulation = null; // Store D3 simulation
+let d3Svg = null; // Store D3 SVG
+let d3Graph = null; // Store D3 graph data
 
 function processImage() {
   if (!currentImageData) {
@@ -355,6 +416,12 @@ function processImage() {
   // Clear previous results
   document.querySelector('svg')?.remove();
   document.querySelector('.pallet').innerHTML = '';
+  
+  // Clear all palette arrays before generating new palette
+  mainPalette = [];
+  workingPalette = [];
+  currentPalette = [];
+  originalPalette = [];
 
   console.log('Trying direct WorkBoots usage without ready()...');
   console.log('workBoots object:', workBoots);
@@ -406,9 +473,18 @@ function processImage() {
         
         // Store original palette for reset functionality
         originalPalette = [...mainPalette];
+        
+        // Auto-save the newly generated palette
+        autoSaveGeneratedPalette(mainPalette);
 
         const graph = createGraph(graphNodes);
         const { svg, simulation, scaleColorNode, resetColorNode } = generateChart(currentImageWidth, currentImageHeight, graph);
+        
+        // Store D3 objects globally for later node additions
+        d3Simulation = simulation;
+        d3Svg = svg;
+        d3Graph = graph;
+        
         document.getElementById('image-container').appendChild(svg);
         
         // Add hover effects to palette colors
@@ -529,7 +605,9 @@ function handleImageDoubleClick(event) {
     source: 'manual-selection'
   };
   
+  // Add to both palettes to keep them in sync
   currentPalette.push(newColor);
+  workingPalette.push(newColor);
   addColorToPalette(newColor);
   
   // Show palette management if not already visible
@@ -551,8 +629,66 @@ function handleImageDoubleClick(event) {
           //   console.log('RobotCopy message skipped:', error.message);
           // }
   
-  // Add a visual indicator at the clicked point
-  addClickIndicator(canvasX, canvasY);
+  // Add a new D3 node to the graph at the clicked point
+  addD3NodeToGraph(canvasX, canvasY, hexColor);
+  
+  // Also show a brief pin animation for visual feedback
+  showBriefPinIndicator(canvasX, canvasY, hexColor);
+}
+
+function showBriefPinIndicator(x, y, hexColor) {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  
+  const rect = canvas.getBoundingClientRect();
+  const posX = (x / canvas.width) * rect.width;
+  const posY = (y / canvas.height) * rect.height;
+  
+  svg.setAttribute("width", "30");
+  svg.setAttribute("height", "40");
+  svg.style.position = 'absolute';
+  svg.style.left = `${posX}px`;
+  svg.style.top = `${posY}px`;
+  svg.style.transform = 'translate(-50%, -100%)';
+  svg.style.zIndex = '1002';
+  svg.style.pointerEvents = 'none';
+  svg.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+  
+  const pin = document.createElementNS(svgNS, "path");
+  pin.setAttribute("d", "M15,3 C10.03,3 6,7.03 6,12 C6,17.25 15,27 15,27 C15,27 24,17.25 24,12 C24,7.03 19.97,3 15,3 Z");
+  pin.setAttribute("fill", hexColor);
+  pin.setAttribute("stroke", "white");
+  pin.setAttribute("stroke-width", "1.5");
+  
+  svg.appendChild(pin);
+  
+  svg.style.animation = 'dcp-pin-quick-drop 0.3s ease-out';
+  
+  if (!document.querySelector('#dcp-pin-animations')) {
+    const style = document.createElement('style');
+    style.id = 'dcp-pin-animations';
+    style.textContent = `
+      @keyframes dcp-pin-quick-drop {
+        from {
+          transform: translate(-50%, -150%) scale(0.3);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -100%) scale(1);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  imageContainer.appendChild(svg);
+  
+  setTimeout(() => {
+    svg.style.transition = 'opacity 0.3s ease-out';
+    svg.style.opacity = '0';
+    setTimeout(() => svg.remove(), 300);
+  }, 800);
 }
 
 function addColorToPalette(color) {
@@ -574,27 +710,104 @@ function addColorToPalette(color) {
   pallet.appendChild(div);
 }
 
-function addClickIndicator(x, y) {
-  // Create a temporary indicator at the clicked point
-  const indicator = document.createElement('div');
-  indicator.style.position = 'absolute';
-  indicator.style.left = `${(x / canvas.width) * 100}%`;
-  indicator.style.top = `${(y / canvas.height) * 100}%`;
-  indicator.style.width = '10px';
-  indicator.style.height = '10px';
-  indicator.style.backgroundColor = 'red';
-  indicator.style.border = '2px solid white';
-  indicator.style.borderRadius = '50%';
-  indicator.style.transform = 'translate(-50%, -50%)';
-  indicator.style.zIndex = '1002';
-  indicator.style.pointerEvents = 'none';
+function addD3NodeToGraph(x, y, hexColor) {
+  if (!d3Simulation || !d3Svg || !d3Graph) {
+    console.warn('D3 graph not initialized yet');
+    return;
+  }
   
-  imageContainer.appendChild(indicator);
+  // Create new nodes (color node + position anchor)
+  const nextIndex = d3Graph.nodes.length / 2; // Each color has 2 nodes
   
-  // Remove indicator after 2 seconds
-  setTimeout(() => {
-    indicator.remove();
-  }, 2000);
+  const colorNode = {
+    index: nextIndex,
+    x: x,
+    y: y,
+    vx: Math.random() * 10,
+    vy: Math.random() * 10,
+    color: hexColor
+  };
+  
+  const positionNode = {
+    index: nextIndex,
+    x: x,
+    y: y,
+    vx: 0,
+    vy: 0,
+    color: undefined
+  };
+  
+  const link = {
+    source: positionNode,
+    target: colorNode,
+    index: nextIndex
+  };
+  
+  // Add to graph data
+  d3Graph.nodes.push(colorNode);
+  d3Graph.nodes.push(positionNode);
+  d3Graph.links.push(link);
+  
+  // Update D3 simulation
+  const svg = d3.select(d3Svg);
+  
+  // Update links
+  const links = svg.selectAll(".link")
+    .data(d3Graph.links)
+    .join("line")
+    .classed("link", true);
+  
+  // Update nodes
+  const nodes = svg.selectAll(".node")
+    .data(d3Graph.nodes)
+    .join("circle")
+    .attr("r", n => n.color ? 12 : 2)
+    .style("fill", n => n.color ? n.color : "#333")
+    .classed("node", true);
+  
+  // Reapply drag behavior
+  const drag = d3.drag()
+    .on("start", function() {
+      d3.select(this).classed("fixed", true);
+    })
+    .on("drag", function(event, d) {
+      d.fx = Math.max(0, Math.min(currentImageWidth, event.x));
+      d.fy = Math.max(0, Math.min(currentImageHeight, event.y));
+      d3Simulation.alpha(1).restart();
+    });
+  
+  nodes.call(drag).on("click", function(event, d) {
+    delete d.fx;
+    delete d.fy;
+    d3.select(this).classed("fixed", false);
+    d3Simulation.alpha(1).restart();
+  });
+  
+  // Update tick function
+  d3Simulation.on("tick", () => {
+    links
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+    nodes
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
+  });
+  
+  // Update simulation with new nodes
+  d3Simulation.nodes(d3Graph.nodes);
+  d3Simulation.alpha(1).restart();
+  
+  // Add a brief visual flash to highlight the new node
+  nodes
+    .filter(n => n === colorNode)
+    .transition()
+    .duration(500)
+    .attr("r", 20)
+    .transition()
+    .duration(300)
+    .attr("r", 12);
 }
 
 function exportPalette() {
@@ -607,38 +820,16 @@ function exportPalette() {
   exportButton.disabled = true;
   exportButton.textContent = 'Exporting...';
   
-  const exportData = {
-    palette: currentPalette,
-    exportDate: new Date().toISOString(),
-    imageDimensions: {
-      width: currentImageWidth,
-      height: currentImageHeight
-    }
-  };
-  
-  const dataStr = JSON.stringify(exportData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `color-palette-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
+  // Send event to state machine to handle export
+  paletteActor.send({ 
+    type: 'EXPORT_PALETTE'
+  });
   
   // Re-enable button after export
   setTimeout(() => {
     exportButton.disabled = false;
     exportButton.textContent = 'Export Palette';
   }, 1000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('PALETTE_EXPORTED', {
-  //     paletteSize: currentPalette.length,
-  //     exportDate: new Date().toISOString()
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 function handleFiles(files) {
@@ -770,17 +961,27 @@ function updatePaletteDisplay() {
 
 function updateSavedPalettesList() {
   const savedPalettesList = document.getElementById('saved-palettes-list');
+  if (!savedPalettesList) return;
+  
   savedPalettesList.innerHTML = '';
   
   savedPalettes.forEach((palette, index) => {
-    const paletteItem = document.createElement('div');
-    paletteItem.className = 'saved-palette-item';
-    paletteItem.title = `Created: ${new Date(palette.timestamp).toLocaleString()}`;
+    const paletteButton = document.createElement('button');
+    paletteButton.className = 'saved-palette-button';
+    paletteButton.title = `Created: ${new Date(palette.timestamp).toLocaleString()}\nClick to load this palette`;
     
-    // Create text span
-    const textSpan = document.createElement('span');
-    textSpan.className = 'saved-palette-item-text';
-    textSpan.textContent = `Palette ${index + 1} (${palette.colors.length} colors)`;
+    // Use the saved palette name or create one
+    const paletteName = palette.name || `Palette ${index + 1} (${palette.colors.length} colors)`;
+    paletteButton.textContent = paletteName;
+    
+    // Add type indicator icon
+    const typeIcon = palette.type === 'auto-generated' ? '🎨' : '💾';
+    paletteButton.textContent = `${typeIcon} ${paletteName}`;
+    
+    // Load palette on click
+    paletteButton.addEventListener('click', () => {
+      loadSavedPalette(index);
+    });
     
     // Create delete button
     const deleteBtn = document.createElement('button');
@@ -794,14 +995,13 @@ function updateSavedPalettesList() {
       deleteSavedPalette(index);
     });
     
-    // Text span click handler (load palette)
-    textSpan.addEventListener('click', () => {
-      loadSavedPalette(index);
-    });
+    // Create wrapper for button and delete
+    const wrapper = document.createElement('div');
+    wrapper.className = 'saved-palette-item';
+    wrapper.appendChild(paletteButton);
+    wrapper.appendChild(deleteBtn);
     
-    paletteItem.appendChild(textSpan);
-    paletteItem.appendChild(deleteBtn);
-    savedPalettesList.appendChild(paletteItem);
+    savedPalettesList.appendChild(wrapper);
   });
 }
 
@@ -834,20 +1034,50 @@ function deleteSavedPalette(index) {
   }
 }
 
+function autoSaveGeneratedPalette(palette) {
+  if (palette.length === 0) return;
+  
+  // Get existing saved palettes
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
+  // Create palette data with timestamp
+  const paletteData = {
+    colors: [...palette],
+    timestamp: new Date().toISOString(),
+    name: `Palette ${savedPalettes.length + 1} (${palette.length} colors)`,
+    type: 'auto-generated'
+  };
+  
+  // Add to saved palettes
+  savedPalettes.push(paletteData);
+  localStorage.setItem('savedPalettes', JSON.stringify(savedPalettes));
+  
+  // Update the saved palettes list in the UI
+  updateSavedPalettesList();
+  
+  console.log('✅ Auto-saved palette:', paletteData.name);
+}
+
 function saveCurrentPalette() {
   if (currentPalette.length === 0) {
     alert('No colors in palette to save.');
     return;
   }
   
+  // Get existing saved palettes
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
   const paletteData = {
     colors: [...currentPalette],
     timestamp: new Date().toISOString(),
-    name: `Palette ${savedPalettes.length + 1}`
+    name: `Palette ${savedPalettes.length + 1} (${currentPalette.length} colors)`,
+    type: 'manual-save'
   };
   
   savedPalettes.push(paletteData);
   localStorage.setItem('savedPalettes', JSON.stringify(savedPalettes));
+  
+  // Update the saved palettes list
   updateSavedPalettesList();
   
   // Show success message
@@ -856,41 +1086,28 @@ function saveCurrentPalette() {
   setTimeout(() => {
     copyStatus.textContent = '';
   }, 2000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('PALETTE_SAVED', {
-  //     paletteSize: currentPalette.length,
-  //     saveDate: new Date().toISOString()
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 function loadSavedPalette(index) {
   if (index >= 0 && index < savedPalettes.length) {
-    currentPalette = [...savedPalettes[index].colors];
+    const palette = savedPalettes[index];
+    
+    // Clear the active/working palette (not the picture/main palette)
+    workingPalette = [...palette.colors];
+    currentPalette = [...palette.colors];
+    
+    // Update displays
     updateActivePaletteDisplay();
-    updatePaletteDisplay();
+    // Don't update the main palette display - keep it showing the picture palette
     
     // Show success message
     const copyStatus = document.getElementById('copy-status');
-    copyStatus.textContent = '✅ Palette loaded!';
+    copyStatus.textContent = `✅ Loaded: ${palette.name}`;
     setTimeout(() => {
       copyStatus.textContent = '';
     }, 2000);
     
-    // RobotCopy temporarily disabled for testing
-    // try {
-    //   robotCopy.sendMessage('PALETTE_LOADED', {
-    //     paletteIndex: index,
-    //     paletteSize: currentPalette.length,
-    //     loadDate: new Date().toISOString()
-    //   });
-    // } catch (error) {
-    //   console.log('RobotCopy message skipped:', error.message);
-    // }
+    console.log('📂 Loaded palette:', palette.name);
   }
 }
 
@@ -1028,8 +1245,9 @@ function generateSplitComplements() {
   
   console.log('Adding split complements to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new complementary colors to the existing working palette (skip base color at index 0)
+  // Add the new complementary colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   
   console.log('Updated working palette:', workingPalette.map(c => c.hex));
   
@@ -1100,8 +1318,9 @@ function generateComponentTriads() {
   
   console.log('Adding component triads to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new triad colors to the existing working palette (skip base color at index 0)
+  // Add the new triad colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   selectedColors = []; // Clear selection
   
   // Update working palette display only
@@ -1176,8 +1395,9 @@ function generateComponentQuads() {
   
   console.log('Adding component quads to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new quad colors to the existing working palette (skip base color at index 0)
+  // Add the new quad colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   selectedColors = []; // Clear selection
   
   // Update working palette display only
@@ -1202,70 +1422,12 @@ function generateComponentQuads() {
   // }
 }
 
-// Color Picker Modal Functions
+// Color Picker Modal Functions - Using new isolated ColorPickerModal
 function showColorPicker() {
-  const modal = document.getElementById('color-picker-modal');
-  modal.style.display = 'flex';
-  
-  // Initialize color picker with current values
-  const hexInput = document.getElementById('hex-color-input');
-  const redSlider = document.getElementById('red-slider');
-  const greenSlider = document.getElementById('green-slider');
-  const blueSlider = document.getElementById('blue-slider');
-  
-  hexInput.value = '#ff0000';
-  redSlider.value = 255;
-  greenSlider.value = 0;
-  blueSlider.value = 0;
-  
-  updateColorPreview();
+  colorPickerModal.show();
 }
 
-function hideColorPicker() {
-  const modal = document.getElementById('color-picker-modal');
-  modal.style.display = 'none';
-}
-
-function updateColorPreview() {
-  const hexInput = document.getElementById('hex-color-input');
-  const redSlider = document.getElementById('red-slider');
-  const greenSlider = document.getElementById('green-slider');
-  const blueSlider = document.getElementById('blue-slider');
-  const colorPreview = document.getElementById('color-preview');
-  
-  let hexColor = hexInput.value;
-  if (hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-    const color = tinycolor(hexColor);
-    redSlider.value = color.toRgb().r;
-    greenSlider.value = color.toRgb().g;
-    blueSlider.value = color.toRgb().b;
-  } else {
-    const r = parseInt(redSlider.value);
-    const g = parseInt(greenSlider.value);
-    const b = parseInt(blueSlider.value);
-    hexColor = tinycolor({ r, g, b }).toHexString();
-    hexInput.value = hexColor;
-  }
-  
-  colorPreview.style.backgroundColor = hexColor;
-  colorPreview.className = 'color-preview valid';
-  colorPreview.innerHTML = `<div class="color-preview-text">${hexColor.toUpperCase()}</div>`;
-  
-  // Update slider value displays
-  document.getElementById('red-value').textContent = redSlider.value;
-  document.getElementById('green-value').textContent = greenSlider.value;
-  document.getElementById('blue-value').textContent = blueSlider.value;
-}
-
-function addCustomColor() {
-  const hexInput = document.getElementById('hex-color-input');
-  const hexColor = hexInput.value;
-  
-  if (!hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-    alert('Please enter a valid hex color (e.g., #ff0000)');
-    return;
-  }
-  
+function addCustomColor(hexColor) {
   const color = tinycolor(hexColor);
   const newColor = {
     hex: hexColor,
@@ -1277,17 +1439,15 @@ function addCustomColor() {
   console.log('Adding custom color to working palette:', hexColor);
   console.log('Working palette before:', workingPalette.length, 'colors');
   
-  // Add to working palette (the editable one)
+  // Add to both palettes to keep them in sync
   workingPalette.push(newColor);
+  currentPalette.push(newColor);
   
   console.log('Working palette after:', workingPalette.length, 'colors');
   console.log('Working palette colors:', workingPalette.map(c => c.hex));
   
   // Update displays
   updateActivePaletteDisplay();
-  // Don't update main palette display - keep it separate
-  
-  hideColorPicker();
   
   // Show success message
   const copyStatus = document.getElementById('copy-status');
@@ -1295,16 +1455,6 @@ function addCustomColor() {
   setTimeout(() => {
     copyStatus.textContent = '';
   }, 2000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('CUSTOM_COLOR_ADDED', {
-  //     color: hexColor,
-  //     source: 'custom-color-picker'
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 // Test Functions for Debugging
@@ -1354,8 +1504,17 @@ document.addEventListener('DOMContentLoaded', function() {
   uiController = new UIController(paletteManager);
   console.log('UI Controller initialized');
   
+  // Wire up color picker modal callback
+  colorPickerModal.onSelect(addCustomColor);
+  
+  // Load saved palettes from localStorage
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
   // Initialize palette management event listeners
   initializePaletteManagement();
+  
+  // Update saved palettes list on load
+  updateSavedPalettesList();
   
   const coffeeAccordionButton = document.getElementById('coffee-accordion-button');
   const coffeeAccordionContent = document.getElementById('coffee-accordion-content');
@@ -1511,52 +1670,8 @@ function initializePaletteManagement() {
     componentQuadsBtn.addEventListener('click', generateComponentQuads);
   }
   
-  // Color picker modal event listeners
-  const closeColorPickerBtn = document.getElementById('close-color-picker');
-  if (closeColorPickerBtn) {
-    closeColorPickerBtn.addEventListener('click', hideColorPicker);
-  }
-  
-  const cancelColorBtn = document.getElementById('cancel-color-btn');
-  if (cancelColorBtn) {
-    cancelColorBtn.addEventListener('click', hideColorPicker);
-  }
-  
-  const addColorBtn = document.getElementById('add-color-btn');
-  if (addColorBtn) {
-    addColorBtn.addEventListener('click', addCustomColor);
-  }
-  
-  // Color picker input event listeners
-  const hexInput = document.getElementById('hex-color-input');
-  if (hexInput) {
-    hexInput.addEventListener('input', updateColorPreview);
-  }
-  
-  const redSlider = document.getElementById('red-slider');
-  if (redSlider) {
-    redSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  const greenSlider = document.getElementById('green-slider');
-  if (greenSlider) {
-    greenSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  const blueSlider = document.getElementById('blue-slider');
-  if (blueSlider) {
-    blueSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  // Close modal when clicking outside
-  const colorPickerModal = document.getElementById('color-picker-modal');
-  if (colorPickerModal) {
-    colorPickerModal.addEventListener('click', (e) => {
-      if (e.target === colorPickerModal) {
-        hideColorPicker();
-      }
-    });
-  }
+  // Note: Color picker modal is now handled by the ColorPickerModal class
+  // Event listeners are managed internally with isolated DOM
   
   // Test button event listeners
   const createTestPaletteBtn = document.getElementById('create-test-palette-btn');

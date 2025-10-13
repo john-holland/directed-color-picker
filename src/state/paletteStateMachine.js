@@ -30,15 +30,15 @@ export const paletteStateMachine = createMachine({
         UPLOAD_IMAGE: {
           target: 'uploading',
           actions: assign({
-            imageData: (context, event) => event.imageData
+            imageData: ({ event }) => event.imageData
           })
         },
         LOAD_SAVED_PALETTE: {
           target: 'paletteReady',
           actions: assign({
-            currentPalette: (context, event) => event.palette,
-            mainPalette: (context, event) => event.palette,
-            workingPalette: (context, event) => event.palette
+            currentPalette: ({ event }) => event.palette,
+            mainPalette: ({ event }) => event.palette,
+            workingPalette: ({ event }) => event.palette
           })
         }
       }
@@ -51,7 +51,7 @@ export const paletteStateMachine = createMachine({
         UPLOAD_ERROR: {
           target: 'error',
           actions: assign({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -61,17 +61,17 @@ export const paletteStateMachine = createMachine({
         RUN_ANALYSIS: {
           target: 'analyzing',
           actions: assign({
-            configuration: (context, event) => ({
+            configuration: ({ context, event }) => ({
               ...context.configuration,
               ...event.configuration
             }),
-            progress: 0
+            progress: () => 0
           })
         },
         UPLOAD_IMAGE: {
           target: 'uploading',
           actions: assign({
-            imageData: (context, event) => event.imageData
+            imageData: ({ event }) => event.imageData
           })
         }
       }
@@ -80,22 +80,22 @@ export const paletteStateMachine = createMachine({
       on: {
         ANALYSIS_PROGRESS: {
           actions: assign({
-            progress: (context, event) => event.progress
+            progress: ({ event }) => event.progress
           })
         },
         ANALYSIS_COMPLETE: {
           target: 'paletteReady',
           actions: assign({
-            currentPalette: (context, event) => event.palette,
-            mainPalette: (context, event) => event.palette,
-            workingPalette: (context, event) => event.palette,
-            progress: 100
+            currentPalette: ({ event }) => event.palette,
+            mainPalette: ({ event }) => event.palette,
+            workingPalette: ({ event }) => event.palette,
+            progress: () => 100
           })
         },
         ANALYSIS_ERROR: {
           target: 'error',
           actions: assign({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -114,23 +114,23 @@ export const paletteStateMachine = createMachine({
         RUN_ANALYSIS: {
           target: 'analyzing',
           actions: assign({
-            configuration: (context, event) => ({
+            configuration: ({ context, event }) => ({
               ...context.configuration,
               ...event.configuration
             }),
-            progress: 0
+            progress: () => 0
           })
         },
         RESET_PALETTE: {
           actions: assign({
-            workingPalette: (context) => [...context.mainPalette],
-            currentPalette: (context) => [...context.mainPalette]
+            workingPalette: ({ context }) => [...context.mainPalette],
+            currentPalette: ({ context }) => [...context.mainPalette]
           })
         },
         CLEAR_PALETTE: {
           actions: assign({
-            workingPalette: [],
-            currentPalette: []
+            workingPalette: () => [],
+            currentPalette: () => []
           })
         }
       }
@@ -139,18 +139,18 @@ export const paletteStateMachine = createMachine({
       on: {
         ADD_COLOR: {
           actions: assign({
-            workingPalette: (context, event) => [...context.workingPalette, event.color],
-            currentPalette: (context, event) => [...context.currentPalette, event.color]
+            workingPalette: ({ context, event }) => [...context.workingPalette, event.color],
+            currentPalette: ({ context, event }) => [...context.currentPalette, event.color]
           })
         },
         REMOVE_COLOR: {
           actions: assign({
-            workingPalette: (context, event) => {
+            workingPalette: ({ context, event }) => {
               const newPalette = [...context.workingPalette];
               newPalette.splice(event.index, 1);
               return newPalette;
             },
-            currentPalette: (context, event) => {
+            currentPalette: ({ context, event }) => {
               const newPalette = [...context.currentPalette];
               newPalette.splice(event.index, 1);
               return newPalette;
@@ -159,14 +159,14 @@ export const paletteStateMachine = createMachine({
         },
         DUPLICATE_PALETTE: {
           actions: assign({
-            workingPalette: (context) => [...context.workingPalette, ...context.workingPalette],
-            currentPalette: (context) => [...context.currentPalette, ...context.currentPalette]
+            workingPalette: ({ context }) => [...context.workingPalette, ...context.workingPalette],
+            currentPalette: ({ context }) => [...context.currentPalette, ...context.currentPalette]
           })
         },
         APPLY_COLOR_THEORY: {
           actions: assign({
-            workingPalette: (context, event) => [...context.workingPalette, ...event.newColors],
-            currentPalette: (context, event) => [...context.currentPalette, ...event.newColors]
+            workingPalette: ({ context, event }) => [...context.workingPalette, ...event.newColors],
+            currentPalette: ({ context, event }) => [...context.currentPalette, ...event.newColors]
           })
         },
         DONE_EDITING: {
@@ -175,30 +175,29 @@ export const paletteStateMachine = createMachine({
       }
     },
     saving: {
-      on: {
-        SAVE_COMPLETE: {
-          target: 'paletteReady',
-          actions: assign({
-            savedPalettes: (context, event) => [...context.savedPalettes, event.savedPalette]
-          })
+      invoke: {
+        src: 'savePalette',
+        onDone: {
+          target: 'paletteReady'
         },
-        SAVE_ERROR: {
+        onError: {
           target: 'error',
           actions: assign({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
     },
     exporting: {
-      on: {
-        EXPORT_COMPLETE: {
+      invoke: {
+        src: 'exportPalette',
+        onDone: {
           target: 'paletteReady'
         },
-        EXPORT_ERROR: {
+        onError: {
           target: 'error',
           actions: assign({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -208,17 +207,18 @@ export const paletteStateMachine = createMachine({
         RETRY: {
           target: 'idle',
           actions: assign({
-            error: null
+            error: () => null
           })
         },
         DISMISS_ERROR: {
           target: 'idle',
           actions: assign({
-            error: null
+            error: () => null
           })
         }
       }
     }
   }
 });
+
 

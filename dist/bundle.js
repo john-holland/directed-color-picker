@@ -58526,6 +58526,7 @@ class PaletteManager {
 
 
 
+
 /***/ }),
 
 /***/ "./src/chart.js":
@@ -58733,15 +58734,15 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         UPLOAD_IMAGE: {
           target: 'uploading',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            imageData: (context, event) => event.imageData
+            imageData: ({ event }) => event.imageData
           })
         },
         LOAD_SAVED_PALETTE: {
           target: 'paletteReady',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            currentPalette: (context, event) => event.palette,
-            mainPalette: (context, event) => event.palette,
-            workingPalette: (context, event) => event.palette
+            currentPalette: ({ event }) => event.palette,
+            mainPalette: ({ event }) => event.palette,
+            workingPalette: ({ event }) => event.palette
           })
         }
       }
@@ -58754,7 +58755,7 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         UPLOAD_ERROR: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -58764,17 +58765,17 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         RUN_ANALYSIS: {
           target: 'analyzing',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            configuration: (context, event) => ({
+            configuration: ({ context, event }) => ({
               ...context.configuration,
               ...event.configuration
             }),
-            progress: 0
+            progress: () => 0
           })
         },
         UPLOAD_IMAGE: {
           target: 'uploading',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            imageData: (context, event) => event.imageData
+            imageData: ({ event }) => event.imageData
           })
         }
       }
@@ -58783,22 +58784,22 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
       on: {
         ANALYSIS_PROGRESS: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            progress: (context, event) => event.progress
+            progress: ({ event }) => event.progress
           })
         },
         ANALYSIS_COMPLETE: {
           target: 'paletteReady',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            currentPalette: (context, event) => event.palette,
-            mainPalette: (context, event) => event.palette,
-            workingPalette: (context, event) => event.palette,
-            progress: 100
+            currentPalette: ({ event }) => event.palette,
+            mainPalette: ({ event }) => event.palette,
+            workingPalette: ({ event }) => event.palette,
+            progress: () => 100
           })
         },
         ANALYSIS_ERROR: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -58817,23 +58818,23 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         RUN_ANALYSIS: {
           target: 'analyzing',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            configuration: (context, event) => ({
+            configuration: ({ context, event }) => ({
               ...context.configuration,
               ...event.configuration
             }),
-            progress: 0
+            progress: () => 0
           })
         },
         RESET_PALETTE: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: (context) => [...context.mainPalette],
-            currentPalette: (context) => [...context.mainPalette]
+            workingPalette: ({ context }) => [...context.mainPalette],
+            currentPalette: ({ context }) => [...context.mainPalette]
           })
         },
         CLEAR_PALETTE: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: [],
-            currentPalette: []
+            workingPalette: () => [],
+            currentPalette: () => []
           })
         }
       }
@@ -58842,18 +58843,18 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
       on: {
         ADD_COLOR: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: (context, event) => [...context.workingPalette, event.color],
-            currentPalette: (context, event) => [...context.currentPalette, event.color]
+            workingPalette: ({ context, event }) => [...context.workingPalette, event.color],
+            currentPalette: ({ context, event }) => [...context.currentPalette, event.color]
           })
         },
         REMOVE_COLOR: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: (context, event) => {
+            workingPalette: ({ context, event }) => {
               const newPalette = [...context.workingPalette];
               newPalette.splice(event.index, 1);
               return newPalette;
             },
-            currentPalette: (context, event) => {
+            currentPalette: ({ context, event }) => {
               const newPalette = [...context.currentPalette];
               newPalette.splice(event.index, 1);
               return newPalette;
@@ -58862,14 +58863,14 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         },
         DUPLICATE_PALETTE: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: (context) => [...context.workingPalette, ...context.workingPalette],
-            currentPalette: (context) => [...context.currentPalette, ...context.currentPalette]
+            workingPalette: ({ context }) => [...context.workingPalette, ...context.workingPalette],
+            currentPalette: ({ context }) => [...context.currentPalette, ...context.currentPalette]
           })
         },
         APPLY_COLOR_THEORY: {
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            workingPalette: (context, event) => [...context.workingPalette, ...event.newColors],
-            currentPalette: (context, event) => [...context.currentPalette, ...event.newColors]
+            workingPalette: ({ context, event }) => [...context.workingPalette, ...event.newColors],
+            currentPalette: ({ context, event }) => [...context.currentPalette, ...event.newColors]
           })
         },
         DONE_EDITING: {
@@ -58878,30 +58879,29 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
       }
     },
     saving: {
-      on: {
-        SAVE_COMPLETE: {
-          target: 'paletteReady',
-          actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            savedPalettes: (context, event) => [...context.savedPalettes, event.savedPalette]
-          })
+      invoke: {
+        src: 'savePalette',
+        onDone: {
+          target: 'paletteReady'
         },
-        SAVE_ERROR: {
+        onError: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
     },
     exporting: {
-      on: {
-        EXPORT_COMPLETE: {
+      invoke: {
+        src: 'exportPalette',
+        onDone: {
           target: 'paletteReady'
         },
-        EXPORT_ERROR: {
+        onError: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: (context, event) => event.error
+            error: ({ event }) => event.error
           })
         }
       }
@@ -58911,19 +58911,451 @@ const paletteStateMachine = (0,xstate__WEBPACK_IMPORTED_MODULE_0__.createMachine
         RETRY: {
           target: 'idle',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: null
+            error: () => null
           })
         },
         DISMISS_ERROR: {
           target: 'idle',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            error: null
+            error: () => null
           })
         }
       }
     }
   }
 });
+
+
+
+
+/***/ }),
+
+/***/ "./src/view/colorPickerModal.js":
+/*!**************************************!*\
+  !*** ./src/view/colorPickerModal.js ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ColorPickerModal": () => (/* binding */ ColorPickerModal)
+/* harmony export */ });
+/* harmony import */ var tinycolor2__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tinycolor2 */ "./node_modules/tinycolor2/esm/tinycolor.js");
+
+
+/**
+ * Custom Color Picker Modal
+ * Dynamically injects HTML for full isolation from existing styles
+ */
+class ColorPickerModal {
+  constructor() {
+    this.modal = null;
+    this.onColorSelected = null;
+    this.currentColor = '#ff0000';
+  }
+
+  /**
+   * Create and inject the modal HTML
+   */
+  createModal() {
+    // Remove existing modal if present
+    const existing = document.querySelector('.dcp-color-modal-overlay');
+    if (existing) {
+      existing.remove();
+    }
+
+    const modalHTML = `
+      <div class="dcp-color-modal-overlay" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+      ">
+        <div class="dcp-color-modal-container" style="
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 20px;
+          padding: 30px;
+          max-width: 500px;
+          width: 90%;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          animation: dcp-modal-slide-in 0.3s ease-out;
+        ">
+          <div class="dcp-modal-header" style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+          ">
+            <h2 style="
+              color: white;
+              margin: 0;
+              font-size: 24px;
+              font-weight: 600;
+            ">🎨 Custom Color Picker</h2>
+            <button class="dcp-close-btn" style="
+              background: rgba(255, 255, 255, 0.2);
+              border: none;
+              color: white;
+              width: 36px;
+              height: 36px;
+              border-radius: 50%;
+              cursor: pointer;
+              font-size: 20px;
+              transition: all 0.2s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">×</button>
+          </div>
+          
+          <div class="dcp-color-preview-container" style="
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+          ">
+            <div class="dcp-color-preview" style="
+              width: 100%;
+              height: 100px;
+              border-radius: 10px;
+              margin-bottom: 15px;
+              background: #ff0000;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+              transition: all 0.3s;
+            "></div>
+            <input type="text" class="dcp-hex-input" value="#ff0000" style="
+              width: 100%;
+              padding: 12px;
+              border: 2px solid #667eea;
+              border-radius: 8px;
+              font-size: 18px;
+              text-align: center;
+              font-family: monospace;
+              font-weight: bold;
+              color: #333;
+              background: #f8f9fa;
+              transition: all 0.2s;
+            "/>
+          </div>
+          
+          <div class="dcp-sliders-container" style="
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+          ">
+            <div class="dcp-slider-group" style="margin-bottom: 15px;">
+              <label style="
+                display: flex;
+                justify-content: space-between;
+                color: #e74c3c;
+                font-weight: 600;
+                margin-bottom: 8px;
+              ">
+                <span>Red</span>
+                <span class="dcp-red-value">255</span>
+              </label>
+              <input type="range" class="dcp-red-slider" min="0" max="255" value="255" style="
+                width: 100%;
+                height: 8px;
+                border-radius: 5px;
+                outline: none;
+                background: linear-gradient(to right, #000 0%, #ff0000 100%);
+                -webkit-appearance: none;
+              "/>
+            </div>
+            
+            <div class="dcp-slider-group" style="margin-bottom: 15px;">
+              <label style="
+                display: flex;
+                justify-content: space-between;
+                color: #27ae60;
+                font-weight: 600;
+                margin-bottom: 8px;
+              ">
+                <span>Green</span>
+                <span class="dcp-green-value">0</span>
+              </label>
+              <input type="range" class="dcp-green-slider" min="0" max="255" value="0" style="
+                width: 100%;
+                height: 8px;
+                border-radius: 5px;
+                outline: none;
+                background: linear-gradient(to right, #000 0%, #00ff00 100%);
+                -webkit-appearance: none;
+              "/>
+            </div>
+            
+            <div class="dcp-slider-group">
+              <label style="
+                display: flex;
+                justify-content: space-between;
+                color: #3498db;
+                font-weight: 600;
+                margin-bottom: 8px;
+              ">
+                <span>Blue</span>
+                <span class="dcp-blue-value">0</span>
+              </label>
+              <input type="range" class="dcp-blue-slider" min="0" max="255" value="0" style="
+                width: 100%;
+                height: 8px;
+                border-radius: 5px;
+                outline: none;
+                background: linear-gradient(to right, #000 0%, #0000ff 100%);
+                -webkit-appearance: none;
+              "/>
+            </div>
+          </div>
+          
+          <div class="dcp-actions" style="
+            display: flex;
+            gap: 15px;
+          ">
+            <button class="dcp-cancel-btn" style="
+              flex: 1;
+              padding: 14px;
+              background: rgba(255, 255, 255, 0.2);
+              color: white;
+              border: 2px solid white;
+              border-radius: 10px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s;
+            ">Cancel</button>
+            <button class="dcp-add-btn" style="
+              flex: 2;
+              padding: 14px;
+              background: white;
+              color: #667eea;
+              border: none;
+              border-radius: 10px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s;
+            ">Add Color</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes dcp-modal-slide-in {
+        from {
+          opacity: 0;
+          transform: translateY(-30px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      
+      .dcp-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+        transform: rotate(90deg);
+      }
+      
+      .dcp-cancel-btn:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(-2px);
+      }
+      
+      .dcp-add-btn:hover {
+        background: #f0f0f0 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      
+      .dcp-hex-input:focus {
+        outline: none;
+        border-color: #764ba2 !important;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
+      }
+      
+      /* Slider thumb styling */
+      input[type="range"].dcp-red-slider::-webkit-slider-thumb,
+      input[type="range"].dcp-green-slider::-webkit-slider-thumb,
+      input[type="range"].dcp-blue-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+      
+      input[type="range"].dcp-red-slider::-webkit-slider-thumb {
+        background: #e74c3c;
+      }
+      
+      input[type="range"].dcp-green-slider::-webkit-slider-thumb {
+        background: #27ae60;
+      }
+      
+      input[type="range"].dcp-blue-slider::-webkit-slider-thumb {
+        background: #3498db;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Parse and inject HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(modalHTML, 'text/html');
+    this.modal = doc.querySelector('.dcp-color-modal-overlay');
+    document.body.appendChild(this.modal);
+    
+    this.attachEventListeners();
+  }
+
+  /**
+   * Attach event listeners to modal elements
+   */
+  attachEventListeners() {
+    const closeBtn = this.modal.querySelector('.dcp-close-btn');
+    const cancelBtn = this.modal.querySelector('.dcp-cancel-btn');
+    const addBtn = this.modal.querySelector('.dcp-add-btn');
+    const hexInput = this.modal.querySelector('.dcp-hex-input');
+    const redSlider = this.modal.querySelector('.dcp-red-slider');
+    const greenSlider = this.modal.querySelector('.dcp-green-slider');
+    const blueSlider = this.modal.querySelector('.dcp-blue-slider');
+
+    closeBtn.addEventListener('click', () => this.hide());
+    cancelBtn.addEventListener('click', () => this.hide());
+    addBtn.addEventListener('click', () => this.addColor());
+    
+    hexInput.addEventListener('input', () => this.updateFromHex());
+    redSlider.addEventListener('input', () => this.updateFromSliders());
+    greenSlider.addEventListener('input', () => this.updateFromSliders());
+    blueSlider.addEventListener('input', () => this.updateFromSliders());
+    
+    // Close on overlay click
+    this.modal.addEventListener('click', (e) => {
+      if (e.target === this.modal) {
+        this.hide();
+      }
+    });
+  }
+
+  /**
+   * Update color from hex input
+   */
+  updateFromHex() {
+    const hexInput = this.modal.querySelector('.dcp-hex-input');
+    const hexColor = hexInput.value;
+    
+    if (hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+      const color = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_0__.default)(hexColor);
+      const rgb = color.toRgb();
+      
+      this.modal.querySelector('.dcp-red-slider').value = rgb.r;
+      this.modal.querySelector('.dcp-green-slider').value = rgb.g;
+      this.modal.querySelector('.dcp-blue-slider').value = rgb.b;
+      
+      this.updatePreview(hexColor);
+    }
+  }
+
+  /**
+   * Update color from RGB sliders
+   */
+  updateFromSliders() {
+    const r = parseInt(this.modal.querySelector('.dcp-red-slider').value);
+    const g = parseInt(this.modal.querySelector('.dcp-green-slider').value);
+    const b = parseInt(this.modal.querySelector('.dcp-blue-slider').value);
+    
+    const hexColor = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_0__.default)({ r, g, b }).toHexString();
+    this.modal.querySelector('.dcp-hex-input').value = hexColor;
+    
+    this.updatePreview(hexColor);
+  }
+
+  /**
+   * Update preview with current color
+   */
+  updatePreview(hexColor) {
+    this.currentColor = hexColor;
+    const preview = this.modal.querySelector('.dcp-color-preview');
+    preview.style.backgroundColor = hexColor;
+    
+    // Update value displays
+    const r = parseInt(this.modal.querySelector('.dcp-red-slider').value);
+    const g = parseInt(this.modal.querySelector('.dcp-green-slider').value);
+    const b = parseInt(this.modal.querySelector('.dcp-blue-slider').value);
+    
+    this.modal.querySelector('.dcp-red-value').textContent = r;
+    this.modal.querySelector('.dcp-green-value').textContent = g;
+    this.modal.querySelector('.dcp-blue-value').textContent = b;
+  }
+
+  /**
+   * Show the modal
+   */
+  show() {
+    if (!this.modal) {
+      this.createModal();
+    }
+    this.modal.style.display = 'flex';
+    
+    // Reset to default color
+    this.currentColor = '#ff0000';
+    this.modal.querySelector('.dcp-hex-input').value = this.currentColor;
+    this.modal.querySelector('.dcp-red-slider').value = 255;
+    this.modal.querySelector('.dcp-green-slider').value = 0;
+    this.modal.querySelector('.dcp-blue-slider').value = 0;
+    this.updatePreview(this.currentColor);
+  }
+
+  /**
+   * Hide the modal
+   */
+  hide() {
+    if (this.modal) {
+      this.modal.style.display = 'none';
+    }
+  }
+
+  /**
+   * Add color and trigger callback
+   */
+  addColor() {
+    const hexColor = this.currentColor;
+    
+    if (!hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+      alert('Please enter a valid hex color');
+      return;
+    }
+    
+    if (this.onColorSelected) {
+      this.onColorSelected(hexColor);
+    }
+    
+    this.hide();
+  }
+
+  /**
+   * Set callback for when color is selected
+   */
+  onSelect(callback) {
+    this.onColorSelected = callback;
+  }
+}
 
 
 
@@ -58954,7 +59386,7 @@ class UIController {
   constructor(paletteManager) {
     this.paletteManager = paletteManager;
     this.viewMachines = {};
-    this.services = {};
+    this.actors = {};
     
     // Create view state machines for different components
     this.initializeViewMachines();
@@ -58979,33 +59411,33 @@ class UIController {
     components.forEach(componentId => {
       const machine = (0,_viewStateMachine_js__WEBPACK_IMPORTED_MODULE_0__.createViewStateMachine)(componentId);
       this.viewMachines[componentId] = machine;
-      this.services[componentId] = (0,xstate__WEBPACK_IMPORTED_MODULE_1__.i)(machine);
+      this.actors[componentId] = (0,xstate__WEBPACK_IMPORTED_MODULE_1__.c)(machine);
       
       // Subscribe to state changes
-      this.services[componentId].onTransition(state => {
-        this.onViewStateChange(componentId, state);
+      this.actors[componentId].subscribe(snapshot => {
+        this.onViewStateChange(componentId, snapshot);
       });
       
-      this.services[componentId].start();
+      this.actors[componentId].start();
     });
   }
 
   /**
    * Handle view state changes
    */
-  onViewStateChange(componentId, state) {
-    console.log(`View [${componentId}]: ${state.value}`, state.context);
+  onViewStateChange(componentId, snapshot) {
+    console.log(`View [${componentId}]: ${snapshot.value}`, snapshot.context);
     
     // Update DOM based on state
     switch (componentId) {
       case 'loading':
-        this.updateLoadingState(state);
+        this.updateLoadingState(snapshot);
         break;
       case 'statusMessage':
-        this.updateStatusMessage(state);
+        this.updateStatusMessage(snapshot);
         break;
       case 'paletteManagement':
-        this.updatePaletteManagementVisibility(state);
+        this.updatePaletteManagementVisibility(snapshot);
         break;
     }
   }
@@ -59028,10 +59460,10 @@ class UIController {
   /**
    * Update loading indicator
    */
-  updateLoadingState(state) {
+  updateLoadingState(snapshot) {
     const loadingElement = document.getElementById('loading');
     if (loadingElement) {
-      if (state.matches('loading')) {
+      if (snapshot.matches({ loading: {} }) || snapshot.value === 'loading') {
         loadingElement.classList.add('show');
       } else {
         loadingElement.classList.remove('show');
@@ -59042,12 +59474,12 @@ class UIController {
   /**
    * Update status message
    */
-  updateStatusMessage(state) {
+  updateStatusMessage(snapshot) {
     const statusElement = document.getElementById('copy-status');
-    if (statusElement && state.context.message) {
-      statusElement.textContent = state.context.message;
+    if (statusElement && snapshot.context.message) {
+      statusElement.textContent = snapshot.context.message;
       
-      if (state.matches('success')) {
+      if (snapshot.matches({ success: {} }) || snapshot.value === 'success') {
         setTimeout(() => {
           statusElement.textContent = '';
         }, 2000);
@@ -59058,12 +59490,12 @@ class UIController {
   /**
    * Update palette management section visibility
    */
-  updatePaletteManagementVisibility(state) {
+  updatePaletteManagementVisibility(snapshot) {
     const paletteManagement = document.getElementById('palette-management');
     if (paletteManagement) {
-      if (state.matches('visible')) {
+      if (snapshot.matches({ visible: {} }) || snapshot.value === 'visible') {
         paletteManagement.style.display = 'block';
-      } else if (state.matches('hidden')) {
+      } else if (snapshot.matches({ hidden: {} }) || snapshot.value === 'hidden') {
         paletteManagement.style.display = 'none';
       }
     }
@@ -59073,7 +59505,7 @@ class UIController {
    * Show success message
    */
   showSuccess(message) {
-    this.services.statusMessage.send({
+    this.actors.statusMessage.send({
       type: 'SUCCESS',
       message: message
     });
@@ -59083,7 +59515,7 @@ class UIController {
    * Show error message
    */
   showError(error) {
-    this.services.statusMessage.send({
+    this.actors.statusMessage.send({
       type: 'ERROR',
       error: error
     });
@@ -59093,21 +59525,21 @@ class UIController {
    * Show loading state
    */
   showLoading() {
-    this.services.loading.send('LOAD');
+    this.actors.loading.send({ type: 'LOAD' });
   }
 
   /**
    * Hide loading state
    */
   hideLoading() {
-    this.services.loading.send('LOADED');
+    this.actors.loading.send({ type: 'LOADED' });
   }
 
   /**
    * Show palette management section
    */
   showPaletteManagement() {
-    this.services.paletteManagement.send('SHOW');
+    this.actors.paletteManagement.send({ type: 'SHOW' });
   }
 
   /**
@@ -59164,14 +59596,15 @@ class UIController {
   }
 
   /**
-   * Cleanup and stop all services
+   * Cleanup and stop all actors
    */
   destroy() {
-    Object.values(this.services).forEach(service => {
-      service.stop();
+    Object.values(this.actors).forEach(actor => {
+      actor.stop();
     });
   }
 }
+
 
 
 
@@ -59220,34 +59653,34 @@ const createViewStateMachine = (componentId) => (0,xstate__WEBPACK_IMPORTED_MODU
         ERROR: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            lastError: (context, event) => event.error
+            lastError: ({ event }) => event.error
           })
         },
         SUCCESS: {
           target: 'success',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            message: (context, event) => event.message
+            message: ({ event }) => event.message
           })
         }
       }
     },
     loading: {
       entry: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-        message: 'Loading...'
+        message: () => 'Loading...'
       }),
       on: {
         LOADED: {
           target: 'visible',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            data: (context, event) => event.data,
-            message: null
+            data: ({ event }) => event.data,
+            message: () => null
           })
         },
         ERROR: {
           target: 'error',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            lastError: (context, event) => event.error,
-            message: null
+            lastError: ({ event }) => event.error,
+            message: () => null
           })
         },
         CANCEL: 'visible'
@@ -59255,13 +59688,13 @@ const createViewStateMachine = (componentId) => (0,xstate__WEBPACK_IMPORTED_MODU
     },
     success: {
       entry: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-        message: (context, event) => event.message || 'Success!'
+        message: ({ event }) => event.message || 'Success!'
       }),
       after: {
         2000: {
           target: 'visible',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            message: null
+            message: () => null
           })
         }
       },
@@ -59269,7 +59702,7 @@ const createViewStateMachine = (componentId) => (0,xstate__WEBPACK_IMPORTED_MODU
         DISMISS: {
           target: 'visible',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            message: null
+            message: () => null
           })
         }
       }
@@ -59280,15 +59713,15 @@ const createViewStateMachine = (componentId) => (0,xstate__WEBPACK_IMPORTED_MODU
         DISMISS: {
           target: 'visible',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            lastError: null,
-            message: null
+            lastError: () => null,
+            message: () => null
           })
         },
         HIDE: {
           target: 'hidden',
           actions: (0,xstate__WEBPACK_IMPORTED_MODULE_1__.a)({
-            lastError: null,
-            message: null
+            lastError: () => null,
+            message: () => null
           })
         }
       }
@@ -59306,6 +59739,7 @@ const createViewStateMachines = (componentIds) => {
   });
   return machines;
 };
+
 
 
 
@@ -59404,10 +59838,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var clusters__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! clusters */ "./node_modules/clusters/clusters.js");
 /* harmony import */ var clusters__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(clusters__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _chart_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chart.js */ "./src/chart.js");
-/* harmony import */ var xstate__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! xstate */ "./node_modules/xstate/dist/raise-f7b216be.development.esm.js");
+/* harmony import */ var xstate__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! xstate */ "./node_modules/xstate/dist/raise-f7b216be.development.esm.js");
 /* harmony import */ var _state_paletteStateMachine_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./state/paletteStateMachine.js */ "./src/state/paletteStateMachine.js");
 /* harmony import */ var _business_paletteManager_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./business/paletteManager.js */ "./src/business/paletteManager.js");
 /* harmony import */ var _view_uiController_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./view/uiController.js */ "./src/view/uiController.js");
+/* harmony import */ var _view_colorPickerModal_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./view/colorPickerModal.js */ "./src/view/colorPickerModal.js");
+
 
 
 
@@ -59485,16 +59921,73 @@ let mainPalette = []; // Main palette below the image (original generated colors
 let workingPalette = []; // Working palette in the management section (for experiments)
 
 // Initialize state machines and business logic
-const paletteService = (0,xstate__WEBPACK_IMPORTED_MODULE_7__.i)(_state_paletteStateMachine_js__WEBPACK_IMPORTED_MODULE_4__.paletteStateMachine);
-const paletteManager = new _business_paletteManager_js__WEBPACK_IMPORTED_MODULE_5__.PaletteManager(paletteService);
-let uiController = null; // Will be initialized after DOM is ready
-
-// Start the palette state machine
-paletteService.onTransition(state => {
-  console.log('Palette State:', state.value, state.context);
+const paletteActor = (0,xstate__WEBPACK_IMPORTED_MODULE_8__.c)(_state_paletteStateMachine_js__WEBPACK_IMPORTED_MODULE_4__.paletteStateMachine, {
+  actors: {
+    savePalette: async () => {
+      try {
+        // Use the global currentPalette and savedPalettes variables
+        const currentSavedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        const paletteData = {
+          colors: [...currentPalette],
+          timestamp: new Date().toISOString(),
+          name: `Palette ${currentSavedPalettes.length + 1}`
+        };
+        
+        const allPalettes = [...currentSavedPalettes, paletteData];
+        localStorage.setItem('savedPalettes', JSON.stringify(allPalettes));
+        
+        // Update global variable
+        savedPalettes = allPalettes;
+        
+        return paletteData;
+      } catch (error) {
+        console.error('Error saving palette:', error);
+        throw error;
+      }
+    },
+    
+    exportPalette: async () => {
+      try {
+        // Use the global currentPalette variable
+        const exportData = {
+          palette: currentPalette,
+          exportDate: new Date().toISOString(),
+          imageDimensions: {
+            width: currentImageWidth,
+            height: currentImageHeight
+          }
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `color-palette-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        
+        return { success: true };
+      } catch (error) {
+        console.error('Error exporting palette:', error);
+        throw error;
+      }
+    }
+  }
 });
 
-paletteService.start();
+const paletteManager = new _business_paletteManager_js__WEBPACK_IMPORTED_MODULE_5__.PaletteManager(paletteActor);
+let uiController = null; // Will be initialized after DOM is ready
+
+// Initialize color picker modal
+const colorPickerModal = new _view_colorPickerModal_js__WEBPACK_IMPORTED_MODULE_7__.ColorPickerModal();
+
+// Subscribe to state changes
+paletteActor.subscribe(snapshot => {
+  console.log('Palette State:', snapshot.value, snapshot.context);
+});
+
+// Start the palette state machine
+paletteActor.start();
 
 // Check WebP and AVIF support
 function checkWebPSupport() {
@@ -59745,6 +60238,9 @@ let currentImageHeight = null;
 let currentPalette = []; // Store current palette colors
 let canvas = null;
 let ctx = null;
+let d3Simulation = null; // Store D3 simulation
+let d3Svg = null; // Store D3 SVG
+let d3Graph = null; // Store D3 graph data
 
 function processImage() {
   if (!currentImageData) {
@@ -59765,6 +60261,12 @@ function processImage() {
   // Clear previous results
   document.querySelector('svg')?.remove();
   document.querySelector('.pallet').innerHTML = '';
+  
+  // Clear all palette arrays before generating new palette
+  mainPalette = [];
+  workingPalette = [];
+  currentPalette = [];
+  originalPalette = [];
 
   console.log('Trying direct WorkBoots usage without ready()...');
   console.log('workBoots object:', workBoots);
@@ -59816,9 +60318,18 @@ function processImage() {
         
         // Store original palette for reset functionality
         originalPalette = [...mainPalette];
+        
+        // Auto-save the newly generated palette
+        autoSaveGeneratedPalette(mainPalette);
 
         const graph = (0,_chart_js__WEBPACK_IMPORTED_MODULE_3__.createGraph)(graphNodes);
         const { svg, simulation, scaleColorNode, resetColorNode } = (0,_chart_js__WEBPACK_IMPORTED_MODULE_3__.generateChart)(currentImageWidth, currentImageHeight, graph);
+        
+        // Store D3 objects globally for later node additions
+        d3Simulation = simulation;
+        d3Svg = svg;
+        d3Graph = graph;
+        
         document.getElementById('image-container').appendChild(svg);
         
         // Add hover effects to palette colors
@@ -59939,7 +60450,9 @@ function handleImageDoubleClick(event) {
     source: 'manual-selection'
   };
   
+  // Add to both palettes to keep them in sync
   currentPalette.push(newColor);
+  workingPalette.push(newColor);
   addColorToPalette(newColor);
   
   // Show palette management if not already visible
@@ -59961,8 +60474,66 @@ function handleImageDoubleClick(event) {
           //   console.log('RobotCopy message skipped:', error.message);
           // }
   
-  // Add a visual indicator at the clicked point
-  addClickIndicator(canvasX, canvasY);
+  // Add a new D3 node to the graph at the clicked point
+  addD3NodeToGraph(canvasX, canvasY, hexColor);
+  
+  // Also show a brief pin animation for visual feedback
+  showBriefPinIndicator(canvasX, canvasY, hexColor);
+}
+
+function showBriefPinIndicator(x, y, hexColor) {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  
+  const rect = canvas.getBoundingClientRect();
+  const posX = (x / canvas.width) * rect.width;
+  const posY = (y / canvas.height) * rect.height;
+  
+  svg.setAttribute("width", "30");
+  svg.setAttribute("height", "40");
+  svg.style.position = 'absolute';
+  svg.style.left = `${posX}px`;
+  svg.style.top = `${posY}px`;
+  svg.style.transform = 'translate(-50%, -100%)';
+  svg.style.zIndex = '1002';
+  svg.style.pointerEvents = 'none';
+  svg.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+  
+  const pin = document.createElementNS(svgNS, "path");
+  pin.setAttribute("d", "M15,3 C10.03,3 6,7.03 6,12 C6,17.25 15,27 15,27 C15,27 24,17.25 24,12 C24,7.03 19.97,3 15,3 Z");
+  pin.setAttribute("fill", hexColor);
+  pin.setAttribute("stroke", "white");
+  pin.setAttribute("stroke-width", "1.5");
+  
+  svg.appendChild(pin);
+  
+  svg.style.animation = 'dcp-pin-quick-drop 0.3s ease-out';
+  
+  if (!document.querySelector('#dcp-pin-animations')) {
+    const style = document.createElement('style');
+    style.id = 'dcp-pin-animations';
+    style.textContent = `
+      @keyframes dcp-pin-quick-drop {
+        from {
+          transform: translate(-50%, -150%) scale(0.3);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -100%) scale(1);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  imageContainer.appendChild(svg);
+  
+  setTimeout(() => {
+    svg.style.transition = 'opacity 0.3s ease-out';
+    svg.style.opacity = '0';
+    setTimeout(() => svg.remove(), 300);
+  }, 800);
 }
 
 function addColorToPalette(color) {
@@ -59984,27 +60555,104 @@ function addColorToPalette(color) {
   pallet.appendChild(div);
 }
 
-function addClickIndicator(x, y) {
-  // Create a temporary indicator at the clicked point
-  const indicator = document.createElement('div');
-  indicator.style.position = 'absolute';
-  indicator.style.left = `${(x / canvas.width) * 100}%`;
-  indicator.style.top = `${(y / canvas.height) * 100}%`;
-  indicator.style.width = '10px';
-  indicator.style.height = '10px';
-  indicator.style.backgroundColor = 'red';
-  indicator.style.border = '2px solid white';
-  indicator.style.borderRadius = '50%';
-  indicator.style.transform = 'translate(-50%, -50%)';
-  indicator.style.zIndex = '1002';
-  indicator.style.pointerEvents = 'none';
+function addD3NodeToGraph(x, y, hexColor) {
+  if (!d3Simulation || !d3Svg || !d3Graph) {
+    console.warn('D3 graph not initialized yet');
+    return;
+  }
   
-  imageContainer.appendChild(indicator);
+  // Create new nodes (color node + position anchor)
+  const nextIndex = d3Graph.nodes.length / 2; // Each color has 2 nodes
   
-  // Remove indicator after 2 seconds
-  setTimeout(() => {
-    indicator.remove();
-  }, 2000);
+  const colorNode = {
+    index: nextIndex,
+    x: x,
+    y: y,
+    vx: Math.random() * 10,
+    vy: Math.random() * 10,
+    color: hexColor
+  };
+  
+  const positionNode = {
+    index: nextIndex,
+    x: x,
+    y: y,
+    vx: 0,
+    vy: 0,
+    color: undefined
+  };
+  
+  const link = {
+    source: positionNode,
+    target: colorNode,
+    index: nextIndex
+  };
+  
+  // Add to graph data
+  d3Graph.nodes.push(colorNode);
+  d3Graph.nodes.push(positionNode);
+  d3Graph.links.push(link);
+  
+  // Update D3 simulation
+  const svg = d3__WEBPACK_IMPORTED_MODULE_0__.select(d3Svg);
+  
+  // Update links
+  const links = svg.selectAll(".link")
+    .data(d3Graph.links)
+    .join("line")
+    .classed("link", true);
+  
+  // Update nodes
+  const nodes = svg.selectAll(".node")
+    .data(d3Graph.nodes)
+    .join("circle")
+    .attr("r", n => n.color ? 12 : 2)
+    .style("fill", n => n.color ? n.color : "#333")
+    .classed("node", true);
+  
+  // Reapply drag behavior
+  const drag = d3__WEBPACK_IMPORTED_MODULE_0__.drag()
+    .on("start", function() {
+      d3__WEBPACK_IMPORTED_MODULE_0__.select(this).classed("fixed", true);
+    })
+    .on("drag", function(event, d) {
+      d.fx = Math.max(0, Math.min(currentImageWidth, event.x));
+      d.fy = Math.max(0, Math.min(currentImageHeight, event.y));
+      d3Simulation.alpha(1).restart();
+    });
+  
+  nodes.call(drag).on("click", function(event, d) {
+    delete d.fx;
+    delete d.fy;
+    d3__WEBPACK_IMPORTED_MODULE_0__.select(this).classed("fixed", false);
+    d3Simulation.alpha(1).restart();
+  });
+  
+  // Update tick function
+  d3Simulation.on("tick", () => {
+    links
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+    nodes
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
+  });
+  
+  // Update simulation with new nodes
+  d3Simulation.nodes(d3Graph.nodes);
+  d3Simulation.alpha(1).restart();
+  
+  // Add a brief visual flash to highlight the new node
+  nodes
+    .filter(n => n === colorNode)
+    .transition()
+    .duration(500)
+    .attr("r", 20)
+    .transition()
+    .duration(300)
+    .attr("r", 12);
 }
 
 function exportPalette() {
@@ -60017,38 +60665,16 @@ function exportPalette() {
   exportButton.disabled = true;
   exportButton.textContent = 'Exporting...';
   
-  const exportData = {
-    palette: currentPalette,
-    exportDate: new Date().toISOString(),
-    imageDimensions: {
-      width: currentImageWidth,
-      height: currentImageHeight
-    }
-  };
-  
-  const dataStr = JSON.stringify(exportData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `color-palette-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
+  // Send event to state machine to handle export
+  paletteActor.send({ 
+    type: 'EXPORT_PALETTE'
+  });
   
   // Re-enable button after export
   setTimeout(() => {
     exportButton.disabled = false;
     exportButton.textContent = 'Export Palette';
   }, 1000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('PALETTE_EXPORTED', {
-  //     paletteSize: currentPalette.length,
-  //     exportDate: new Date().toISOString()
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 function handleFiles(files) {
@@ -60180,17 +60806,27 @@ function updatePaletteDisplay() {
 
 function updateSavedPalettesList() {
   const savedPalettesList = document.getElementById('saved-palettes-list');
+  if (!savedPalettesList) return;
+  
   savedPalettesList.innerHTML = '';
   
   savedPalettes.forEach((palette, index) => {
-    const paletteItem = document.createElement('div');
-    paletteItem.className = 'saved-palette-item';
-    paletteItem.title = `Created: ${new Date(palette.timestamp).toLocaleString()}`;
+    const paletteButton = document.createElement('button');
+    paletteButton.className = 'saved-palette-button';
+    paletteButton.title = `Created: ${new Date(palette.timestamp).toLocaleString()}\nClick to load this palette`;
     
-    // Create text span
-    const textSpan = document.createElement('span');
-    textSpan.className = 'saved-palette-item-text';
-    textSpan.textContent = `Palette ${index + 1} (${palette.colors.length} colors)`;
+    // Use the saved palette name or create one
+    const paletteName = palette.name || `Palette ${index + 1} (${palette.colors.length} colors)`;
+    paletteButton.textContent = paletteName;
+    
+    // Add type indicator icon
+    const typeIcon = palette.type === 'auto-generated' ? '🎨' : '💾';
+    paletteButton.textContent = `${typeIcon} ${paletteName}`;
+    
+    // Load palette on click
+    paletteButton.addEventListener('click', () => {
+      loadSavedPalette(index);
+    });
     
     // Create delete button
     const deleteBtn = document.createElement('button');
@@ -60204,14 +60840,13 @@ function updateSavedPalettesList() {
       deleteSavedPalette(index);
     });
     
-    // Text span click handler (load palette)
-    textSpan.addEventListener('click', () => {
-      loadSavedPalette(index);
-    });
+    // Create wrapper for button and delete
+    const wrapper = document.createElement('div');
+    wrapper.className = 'saved-palette-item';
+    wrapper.appendChild(paletteButton);
+    wrapper.appendChild(deleteBtn);
     
-    paletteItem.appendChild(textSpan);
-    paletteItem.appendChild(deleteBtn);
-    savedPalettesList.appendChild(paletteItem);
+    savedPalettesList.appendChild(wrapper);
   });
 }
 
@@ -60244,20 +60879,50 @@ function deleteSavedPalette(index) {
   }
 }
 
+function autoSaveGeneratedPalette(palette) {
+  if (palette.length === 0) return;
+  
+  // Get existing saved palettes
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
+  // Create palette data with timestamp
+  const paletteData = {
+    colors: [...palette],
+    timestamp: new Date().toISOString(),
+    name: `Palette ${savedPalettes.length + 1} (${palette.length} colors)`,
+    type: 'auto-generated'
+  };
+  
+  // Add to saved palettes
+  savedPalettes.push(paletteData);
+  localStorage.setItem('savedPalettes', JSON.stringify(savedPalettes));
+  
+  // Update the saved palettes list in the UI
+  updateSavedPalettesList();
+  
+  console.log('✅ Auto-saved palette:', paletteData.name);
+}
+
 function saveCurrentPalette() {
   if (currentPalette.length === 0) {
     alert('No colors in palette to save.');
     return;
   }
   
+  // Get existing saved palettes
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
   const paletteData = {
     colors: [...currentPalette],
     timestamp: new Date().toISOString(),
-    name: `Palette ${savedPalettes.length + 1}`
+    name: `Palette ${savedPalettes.length + 1} (${currentPalette.length} colors)`,
+    type: 'manual-save'
   };
   
   savedPalettes.push(paletteData);
   localStorage.setItem('savedPalettes', JSON.stringify(savedPalettes));
+  
+  // Update the saved palettes list
   updateSavedPalettesList();
   
   // Show success message
@@ -60266,41 +60931,28 @@ function saveCurrentPalette() {
   setTimeout(() => {
     copyStatus.textContent = '';
   }, 2000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('PALETTE_SAVED', {
-  //     paletteSize: currentPalette.length,
-  //     saveDate: new Date().toISOString()
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 function loadSavedPalette(index) {
   if (index >= 0 && index < savedPalettes.length) {
-    currentPalette = [...savedPalettes[index].colors];
+    const palette = savedPalettes[index];
+    
+    // Clear the active/working palette (not the picture/main palette)
+    workingPalette = [...palette.colors];
+    currentPalette = [...palette.colors];
+    
+    // Update displays
     updateActivePaletteDisplay();
-    updatePaletteDisplay();
+    // Don't update the main palette display - keep it showing the picture palette
     
     // Show success message
     const copyStatus = document.getElementById('copy-status');
-    copyStatus.textContent = '✅ Palette loaded!';
+    copyStatus.textContent = `✅ Loaded: ${palette.name}`;
     setTimeout(() => {
       copyStatus.textContent = '';
     }, 2000);
     
-    // RobotCopy temporarily disabled for testing
-    // try {
-    //   robotCopy.sendMessage('PALETTE_LOADED', {
-    //     paletteIndex: index,
-    //     paletteSize: currentPalette.length,
-    //     loadDate: new Date().toISOString()
-    //   });
-    // } catch (error) {
-    //   console.log('RobotCopy message skipped:', error.message);
-    // }
+    console.log('📂 Loaded palette:', palette.name);
   }
 }
 
@@ -60438,8 +61090,9 @@ function generateSplitComplements() {
   
   console.log('Adding split complements to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new complementary colors to the existing working palette (skip base color at index 0)
+  // Add the new complementary colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   
   console.log('Updated working palette:', workingPalette.map(c => c.hex));
   
@@ -60510,8 +61163,9 @@ function generateComponentTriads() {
   
   console.log('Adding component triads to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new triad colors to the existing working palette (skip base color at index 0)
+  // Add the new triad colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   selectedColors = []; // Clear selection
   
   // Update working palette display only
@@ -60586,8 +61240,9 @@ function generateComponentQuads() {
   
   console.log('Adding component quads to palette:', newColors.slice(1).map(c => c.hex));
   
-  // Add the new quad colors to the existing working palette (skip base color at index 0)
+  // Add the new quad colors to both palettes (skip base color at index 0)
   workingPalette = [...workingPalette, ...newColors.slice(1)];
+  currentPalette = [...currentPalette, ...newColors.slice(1)];
   selectedColors = []; // Clear selection
   
   // Update working palette display only
@@ -60612,70 +61267,12 @@ function generateComponentQuads() {
   // }
 }
 
-// Color Picker Modal Functions
+// Color Picker Modal Functions - Using new isolated ColorPickerModal
 function showColorPicker() {
-  const modal = document.getElementById('color-picker-modal');
-  modal.style.display = 'flex';
-  
-  // Initialize color picker with current values
-  const hexInput = document.getElementById('hex-color-input');
-  const redSlider = document.getElementById('red-slider');
-  const greenSlider = document.getElementById('green-slider');
-  const blueSlider = document.getElementById('blue-slider');
-  
-  hexInput.value = '#ff0000';
-  redSlider.value = 255;
-  greenSlider.value = 0;
-  blueSlider.value = 0;
-  
-  updateColorPreview();
+  colorPickerModal.show();
 }
 
-function hideColorPicker() {
-  const modal = document.getElementById('color-picker-modal');
-  modal.style.display = 'none';
-}
-
-function updateColorPreview() {
-  const hexInput = document.getElementById('hex-color-input');
-  const redSlider = document.getElementById('red-slider');
-  const greenSlider = document.getElementById('green-slider');
-  const blueSlider = document.getElementById('blue-slider');
-  const colorPreview = document.getElementById('color-preview');
-  
-  let hexColor = hexInput.value;
-  if (hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-    const color = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_1__.default)(hexColor);
-    redSlider.value = color.toRgb().r;
-    greenSlider.value = color.toRgb().g;
-    blueSlider.value = color.toRgb().b;
-  } else {
-    const r = parseInt(redSlider.value);
-    const g = parseInt(greenSlider.value);
-    const b = parseInt(blueSlider.value);
-    hexColor = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_1__.default)({ r, g, b }).toHexString();
-    hexInput.value = hexColor;
-  }
-  
-  colorPreview.style.backgroundColor = hexColor;
-  colorPreview.className = 'color-preview valid';
-  colorPreview.innerHTML = `<div class="color-preview-text">${hexColor.toUpperCase()}</div>`;
-  
-  // Update slider value displays
-  document.getElementById('red-value').textContent = redSlider.value;
-  document.getElementById('green-value').textContent = greenSlider.value;
-  document.getElementById('blue-value').textContent = blueSlider.value;
-}
-
-function addCustomColor() {
-  const hexInput = document.getElementById('hex-color-input');
-  const hexColor = hexInput.value;
-  
-  if (!hexColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-    alert('Please enter a valid hex color (e.g., #ff0000)');
-    return;
-  }
-  
+function addCustomColor(hexColor) {
   const color = (0,tinycolor2__WEBPACK_IMPORTED_MODULE_1__.default)(hexColor);
   const newColor = {
     hex: hexColor,
@@ -60687,17 +61284,15 @@ function addCustomColor() {
   console.log('Adding custom color to working palette:', hexColor);
   console.log('Working palette before:', workingPalette.length, 'colors');
   
-  // Add to working palette (the editable one)
+  // Add to both palettes to keep them in sync
   workingPalette.push(newColor);
+  currentPalette.push(newColor);
   
   console.log('Working palette after:', workingPalette.length, 'colors');
   console.log('Working palette colors:', workingPalette.map(c => c.hex));
   
   // Update displays
   updateActivePaletteDisplay();
-  // Don't update main palette display - keep it separate
-  
-  hideColorPicker();
   
   // Show success message
   const copyStatus = document.getElementById('copy-status');
@@ -60705,16 +61300,6 @@ function addCustomColor() {
   setTimeout(() => {
     copyStatus.textContent = '';
   }, 2000);
-  
-  // RobotCopy temporarily disabled for testing
-  // try {
-  //   robotCopy.sendMessage('CUSTOM_COLOR_ADDED', {
-  //     color: hexColor,
-  //     source: 'custom-color-picker'
-  //   });
-  // } catch (error) {
-  //   console.log('RobotCopy message skipped:', error.message);
-  // }
 }
 
 // Test Functions for Debugging
@@ -60764,8 +61349,17 @@ document.addEventListener('DOMContentLoaded', function() {
   uiController = new _view_uiController_js__WEBPACK_IMPORTED_MODULE_6__.UIController(paletteManager);
   console.log('UI Controller initialized');
   
+  // Wire up color picker modal callback
+  colorPickerModal.onSelect(addCustomColor);
+  
+  // Load saved palettes from localStorage
+  savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+  
   // Initialize palette management event listeners
   initializePaletteManagement();
+  
+  // Update saved palettes list on load
+  updateSavedPalettesList();
   
   const coffeeAccordionButton = document.getElementById('coffee-accordion-button');
   const coffeeAccordionContent = document.getElementById('coffee-accordion-content');
@@ -60921,52 +61515,8 @@ function initializePaletteManagement() {
     componentQuadsBtn.addEventListener('click', generateComponentQuads);
   }
   
-  // Color picker modal event listeners
-  const closeColorPickerBtn = document.getElementById('close-color-picker');
-  if (closeColorPickerBtn) {
-    closeColorPickerBtn.addEventListener('click', hideColorPicker);
-  }
-  
-  const cancelColorBtn = document.getElementById('cancel-color-btn');
-  if (cancelColorBtn) {
-    cancelColorBtn.addEventListener('click', hideColorPicker);
-  }
-  
-  const addColorBtn = document.getElementById('add-color-btn');
-  if (addColorBtn) {
-    addColorBtn.addEventListener('click', addCustomColor);
-  }
-  
-  // Color picker input event listeners
-  const hexInput = document.getElementById('hex-color-input');
-  if (hexInput) {
-    hexInput.addEventListener('input', updateColorPreview);
-  }
-  
-  const redSlider = document.getElementById('red-slider');
-  if (redSlider) {
-    redSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  const greenSlider = document.getElementById('green-slider');
-  if (greenSlider) {
-    greenSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  const blueSlider = document.getElementById('blue-slider');
-  if (blueSlider) {
-    blueSlider.addEventListener('input', updateColorPreview);
-  }
-  
-  // Close modal when clicking outside
-  const colorPickerModal = document.getElementById('color-picker-modal');
-  if (colorPickerModal) {
-    colorPickerModal.addEventListener('click', (e) => {
-      if (e.target === colorPickerModal) {
-        hideColorPicker();
-      }
-    });
-  }
+  // Note: Color picker modal is now handled by the ColorPickerModal class
+  // Event listeners are managed internally with isolated DOM
   
   // Test button event listeners
   const createTestPaletteBtn = document.getElementById('create-test-palette-btn');

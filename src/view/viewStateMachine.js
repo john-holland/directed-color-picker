@@ -27,34 +27,34 @@ export const createViewStateMachine = (componentId) => createMachine({
         ERROR: {
           target: 'error',
           actions: assign({
-            lastError: (context, event) => event.error
+            lastError: ({ event }) => event.error
           })
         },
         SUCCESS: {
           target: 'success',
           actions: assign({
-            message: (context, event) => event.message
+            message: ({ event }) => event.message
           })
         }
       }
     },
     loading: {
       entry: assign({
-        message: 'Loading...'
+        message: () => 'Loading...'
       }),
       on: {
         LOADED: {
           target: 'visible',
           actions: assign({
-            data: (context, event) => event.data,
-            message: null
+            data: ({ event }) => event.data,
+            message: () => null
           })
         },
         ERROR: {
           target: 'error',
           actions: assign({
-            lastError: (context, event) => event.error,
-            message: null
+            lastError: ({ event }) => event.error,
+            message: () => null
           })
         },
         CANCEL: 'visible'
@@ -62,13 +62,13 @@ export const createViewStateMachine = (componentId) => createMachine({
     },
     success: {
       entry: assign({
-        message: (context, event) => event.message || 'Success!'
+        message: ({ event }) => event.message || 'Success!'
       }),
       after: {
         2000: {
           target: 'visible',
           actions: assign({
-            message: null
+            message: () => null
           })
         }
       },
@@ -76,7 +76,7 @@ export const createViewStateMachine = (componentId) => createMachine({
         DISMISS: {
           target: 'visible',
           actions: assign({
-            message: null
+            message: () => null
           })
         }
       }
@@ -87,15 +87,15 @@ export const createViewStateMachine = (componentId) => createMachine({
         DISMISS: {
           target: 'visible',
           actions: assign({
-            lastError: null,
-            message: null
+            lastError: () => null,
+            message: () => null
           })
         },
         HIDE: {
           target: 'hidden',
           actions: assign({
-            lastError: null,
-            message: null
+            lastError: () => null,
+            message: () => null
           })
         }
       }
@@ -113,4 +113,5 @@ export const createViewStateMachines = (componentIds) => {
   });
   return machines;
 };
+
 

@@ -1,4 +1,4 @@
-import { interpret } from 'xstate';
+import { createActor } from 'xstate';
 import { createViewStateMachine } from './viewStateMachine.js';
 
 /**
@@ -10,7 +10,7 @@ export class UIController {
   constructor(paletteManager) {
     this.paletteManager = paletteManager;
     this.viewMachines = {};
-    this.services = {};
+    this.actors = {};
     
     // Create view state machines for different components
     this.initializeViewMachines();
@@ -35,33 +35,33 @@ export class UIController {
     components.forEach(componentId => {
       const machine = createViewStateMachine(componentId);
       this.viewMachines[componentId] = machine;
-      this.services[componentId] = interpret(machine);
+      this.actors[componentId] = createActor(machine);
       
       // Subscribe to state changes
-      this.services[componentId].onTransition(state => {
-        this.onViewStateChange(componentId, state);
+      this.actors[componentId].subscribe(snapshot => {
+        this.onViewStateChange(componentId, snapshot);
       });
       
-      this.services[componentId].start();
+      this.actors[componentId].start();
     });
   }
 
   /**
    * Handle view state changes
    */
-  onViewStateChange(componentId, state) {
-    console.log(`View [${componentId}]: ${state.value}`, state.context);
+  onViewStateChange(componentId, snapshot) {
+    console.log(`View [${componentId}]: ${snapshot.value}`, snapshot.context);
     
     // Update DOM based on state
     switch (componentId) {
       case 'loading':
-        this.updateLoadingState(state);
+        this.updateLoadingState(snapshot);
         break;
       case 'statusMessage':
-        this.updateStatusMessage(state);
+        this.updateStatusMessage(snapshot);
         break;
       case 'paletteManagement':
-        this.updatePaletteManagementVisibility(state);
+        this.updatePaletteManagementVisibility(snapshot);
         break;
     }
   }
@@ -84,10 +84,10 @@ export class UIController {
   /**
    * Update loading indicator
    */
-  updateLoadingState(state) {
+  updateLoadingState(snapshot) {
     const loadingElement = document.getElementById('loading');
     if (loadingElement) {
-      if (state.matches('loading')) {
+      if (snapshot.matches({ loading: {} }) || snapshot.value === 'loading') {
         loadingElement.classList.add('show');
       } else {
         loadingElement.classList.remove('show');
@@ -98,12 +98,12 @@ export class UIController {
   /**
    * Update status message
    */
-  updateStatusMessage(state) {
+  updateStatusMessage(snapshot) {
     const statusElement = document.getElementById('copy-status');
-    if (statusElement && state.context.message) {
-      statusElement.textContent = state.context.message;
+    if (statusElement && snapshot.context.message) {
+      statusElement.textContent = snapshot.context.message;
       
-      if (state.matches('success')) {
+      if (snapshot.matches({ success: {} }) || snapshot.value === 'success') {
         setTimeout(() => {
           statusElement.textContent = '';
         }, 2000);
@@ -114,12 +114,12 @@ export class UIController {
   /**
    * Update palette management section visibility
    */
-  updatePaletteManagementVisibility(state) {
+  updatePaletteManagementVisibility(snapshot) {
     const paletteManagement = document.getElementById('palette-management');
     if (paletteManagement) {
-      if (state.matches('visible')) {
+      if (snapshot.matches({ visible: {} }) || snapshot.value === 'visible') {
         paletteManagement.style.display = 'block';
-      } else if (state.matches('hidden')) {
+      } else if (snapshot.matches({ hidden: {} }) || snapshot.value === 'hidden') {
         paletteManagement.style.display = 'none';
       }
     }
@@ -129,7 +129,7 @@ export class UIController {
    * Show success message
    */
   showSuccess(message) {
-    this.services.statusMessage.send({
+    this.actors.statusMessage.send({
       type: 'SUCCESS',
       message: message
     });
@@ -139,7 +139,7 @@ export class UIController {
    * Show error message
    */
   showError(error) {
-    this.services.statusMessage.send({
+    this.actors.statusMessage.send({
       type: 'ERROR',
       error: error
     });
@@ -149,21 +149,21 @@ export class UIController {
    * Show loading state
    */
   showLoading() {
-    this.services.loading.send('LOAD');
+    this.actors.loading.send({ type: 'LOAD' });
   }
 
   /**
    * Hide loading state
    */
   hideLoading() {
-    this.services.loading.send('LOADED');
+    this.actors.loading.send({ type: 'LOADED' });
   }
 
   /**
    * Show palette management section
    */
   showPaletteManagement() {
-    this.services.paletteManagement.send('SHOW');
+    this.actors.paletteManagement.send({ type: 'SHOW' });
   }
 
   /**
@@ -220,12 +220,13 @@ export class UIController {
   }
 
   /**
-   * Cleanup and stop all services
+   * Cleanup and stop all actors
    */
   destroy() {
-    Object.values(this.services).forEach(service => {
-      service.stop();
+    Object.values(this.actors).forEach(actor => {
+      actor.stop();
     });
   }
 }
+
 
