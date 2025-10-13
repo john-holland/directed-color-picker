@@ -4,12 +4,12 @@ const path = require('path');
 module.exports = {
   mode: 'development',
   entry: {
-    'bundle': './src/index.js',
+    'app': './src/index.js',
     'k-means-clustering-worker': './src/algorithms/k-means-clustering.worker.js'
   },
   output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: '[name].[contenthash:8].js'
+        filename: '[name].js'
   },
   devtool: 'source-map',
   plugins: [

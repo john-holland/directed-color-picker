@@ -59855,6 +59855,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const workbootsExports = __webpack_require__(/*! workboots */ "./node_modules/workboots/dist/work-boots.browser.js");
+console.log('🎨 Directed Color Picker v1.1.0 - XState v5 Edition');
 console.log('Constructor found! Using window.WorkBoots.WorkBoots');
 const WorkBoots = window.WorkBoots.WorkBoots;
 
@@ -61529,4 +61530,4 @@ function initializePaletteManagement() {
 
 /******/ })()
 ;
-//# sourceMappingURL=bundle.js.map
+//# sourceMappingURL=app.js.map
