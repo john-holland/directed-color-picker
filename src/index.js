@@ -10,6 +10,7 @@ import { UIController } from './view/uiController.js';
 import { ColorPickerModal } from './view/colorPickerModal.js';
 
 const workbootsExports = require('workboots');
+console.log('🎨 Directed Color Picker v1.1.0 - XState v5 Edition');
 console.log('Constructor found! Using window.WorkBoots.WorkBoots');
 const WorkBoots = window.WorkBoots.WorkBoots;
 
