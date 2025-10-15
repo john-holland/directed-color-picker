@@ -492,24 +492,28 @@
       }
 
       .copy-address-btn {
-        background: #6c757d;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
-        border-radius: 6px;
-        padding: 8px 10px;
+        border-radius: 8px;
+        padding: 12px 20px;
         cursor: pointer;
         font-size: 14px;
-        transition: all 0.2s ease;
+        font-weight: 600;
+        transition: all 0.3s ease;
         flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
       }
 
       .copy-address-btn:hover {
-        background: #5a6268;
-        transform: scale(1.05);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
       }
 
       .copy-address-btn:active {
-        transform: scale(0.95);
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
       }
 
       .coinbase-link-section {
@@ -1464,19 +1468,10 @@
               <p class="eth-address-label">ETH Address:</p>
               <div class="eth-address-container">
                 <code class="eth-address">0x30c599E83Afc27Fc7b2bCdaF400E5c15a31C6148</code>
-                <button class="copy-address-btn" id="copy-address-btn" title="Copy address to clipboard">
-                  📋
+                <button class="copy-address-btn copy-eth-full-btn" id="copy-eth-address-btn" title="Copy ETH address to clipboard">
+                  Copy ETH Address
                 </button>
               </div>
-            </div>
-            <div class="coinbase-link-section">
-              <p>Quick send via Coinbase:</p>
-              <a href="https://wallet.coinbase.com/send?address=0x30c599E83Afc27Fc7b2bCdaF400E5c15a31C6148" 
-                 target="_blank" 
-                 rel="noopener noreferrer" 
-                 class="coinbase-link">
-                🚀 Send ETH via Coinbase
-              </a>
             </div>
 
             <!-- Bitcoin Section -->
@@ -1493,19 +1488,10 @@
                 <p class="bitcoin-address-label">BTC Address:</p>
                 <div class="bitcoin-address-container">
                   <code class="bitcoin-address">12eL89fh5t5E5hKDfVyypKB6Yzg9JNQDk6</code>
-                  <button class="copy-address-btn" id="copy-btc-address-btn" title="Copy BTC address to clipboard">
-                    📋
+                  <button class="copy-address-btn copy-btc-full-btn" id="copy-btc-address-btn" title="Copy BTC address to clipboard">
+                    Copy BTC Address
                   </button>
                 </div>
-              </div>
-              <div class="bitcoin-coinbase-link-section">
-                <p>Quick send via Coinbase:</p>
-                <a href="https://wallet.coinbase.com/send?address=12eL89fh5t5E5hKDfVyypKB6Yzg9JNQDk6" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="bitcoin-coinbase-link">
-                  🚀 Send BTC via Coinbase
-                </a>
               </div>
             </div>
 

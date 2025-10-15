@@ -61385,23 +61385,23 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Copy ETH Address Functionality
-  const copyAddressBtn = document.getElementById('copy-address-btn');
-  if (copyAddressBtn) {
-    copyAddressBtn.addEventListener('click', async function() {
+  const copyEthAddressBtn = document.getElementById('copy-eth-address-btn');
+  if (copyEthAddressBtn) {
+    copyEthAddressBtn.addEventListener('click', async function() {
       const ethAddress = '0x30c599E83Afc27Fc7b2bCdaF400E5c15a31C6148';
       
       try {
         await navigator.clipboard.writeText(ethAddress);
         
         // Visual feedback
-        const originalText = copyAddressBtn.textContent;
-        copyAddressBtn.textContent = '✅';
-        copyAddressBtn.style.background = '#28a745';
+        const originalText = copyEthAddressBtn.textContent;
+        copyEthAddressBtn.textContent = '✅ Copied!';
+        copyEthAddressBtn.style.background = '#28a745';
         
         // Reset after 2 seconds
         setTimeout(() => {
-          copyAddressBtn.textContent = originalText;
-          copyAddressBtn.style.background = '#6c757d';
+          copyEthAddressBtn.textContent = originalText;
+          copyEthAddressBtn.style.background = '#6c757d';
         }, 2000);
         
       } catch (err) {
@@ -61414,14 +61414,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(textArea);
         
         // Visual feedback
-        const originalText = copyAddressBtn.textContent;
-        copyAddressBtn.textContent = '✅';
-        copyAddressBtn.style.background = '#28a745';
+        const originalText = copyEthAddressBtn.textContent;
+        copyEthAddressBtn.textContent = '✅ Copied!';
+        copyEthAddressBtn.style.background = '#28a745';
         
         // Reset after 2 seconds
         setTimeout(() => {
-          copyAddressBtn.textContent = originalText;
-          copyAddressBtn.style.background = '#6c757d';
+          copyEthAddressBtn.textContent = originalText;
+          copyEthAddressBtn.style.background = '#6c757d';
         }, 2000);
       }
     });
@@ -61437,7 +61437,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Visual feedback
           const originalText = copyBtcAddressBtn.textContent;
-          copyBtcAddressBtn.textContent = '✅';
+          copyBtcAddressBtn.textContent = '✅ Copied!';
           copyBtcAddressBtn.style.background = '#28a745';
           
           // Reset after 2 seconds
@@ -61457,7 +61457,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Visual feedback
           const originalText = copyBtcAddressBtn.textContent;
-          copyBtcAddressBtn.textContent = '✅';
+          copyBtcAddressBtn.textContent = '✅ Copied!';
           copyBtcAddressBtn.style.background = '#28a745';
           
           // Reset after 2 seconds
