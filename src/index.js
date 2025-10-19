@@ -953,16 +953,31 @@ function removeProcessingD3Nodes() {
   
   console.log(`🧹 Removing ${processingD3Nodes.length} processing nodes`);
   
-  // Remove processing nodes from D3 graph arrays
+  // Collect all node and link indices to remove
+  const nodeIndicesToRemove = [];
+  const linkIndicesToRemove = [];
+  
   processingD3Nodes.forEach(nodeData => {
     const colorNodeIndex = d3Graph.nodes.indexOf(nodeData.colorNode);
     const positionNodeIndex = d3Graph.nodes.indexOf(nodeData.positionNode);
     const linkIndex = d3Graph.links.indexOf(nodeData.link);
     
-    if (colorNodeIndex > -1) d3Graph.nodes.splice(colorNodeIndex, 1);
-    if (positionNodeIndex > -1) d3Graph.nodes.splice(positionNodeIndex, 1);
-    if (linkIndex > -1) d3Graph.links.splice(linkIndex, 1);
+    if (colorNodeIndex > -1) nodeIndicesToRemove.push(colorNodeIndex);
+    if (positionNodeIndex > -1) nodeIndicesToRemove.push(positionNodeIndex);
+    if (linkIndex > -1) linkIndicesToRemove.push(linkIndex);
   });
+  
+  // Sort in descending order and remove from highest to lowest
+  // This prevents index shifting issues
+  nodeIndicesToRemove.sort((a, b) => b - a).forEach(index => {
+    d3Graph.nodes.splice(index, 1);
+  });
+  
+  linkIndicesToRemove.sort((a, b) => b - a).forEach(index => {
+    d3Graph.links.splice(index, 1);
+  });
+  
+  console.log(`🗑️ Removed ${nodeIndicesToRemove.length} nodes and ${linkIndicesToRemove.length} links`);
   
   // Update D3 visualization
   refreshD3Graph();
