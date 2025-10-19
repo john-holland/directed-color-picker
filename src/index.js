@@ -452,6 +452,16 @@ function processImage() {
   originalPalette = [];
   processingPalette = [];
   processingD3Nodes = [];
+  
+  // Reset D3 globals since we removed the SVG
+  d3Simulation = null;
+  d3Svg = null;
+  d3Graph = null;
+  
+  // Reinitialize empty D3 graph for processing preview
+  if (currentImageWidth && currentImageHeight) {
+    initializeEmptyD3Graph(currentImageWidth, currentImageHeight);
+  }
 
   console.log('Trying direct WorkBoots usage without ready()...');
   console.log('workBoots object:', workBoots);
@@ -536,7 +546,7 @@ function processImage() {
               nodes.filter((d, i) => d.color && !d.isProcessing && i === (d3Graph.nodes.length - graphNodes.length * 2) + index * 2)
                 .transition()
                 .duration(200)
-                .attr("r", 18);
+                .attr("r", 36);  // 1.5x of 24
             });
             
             div.addEventListener('mouseleave', () => {
@@ -545,7 +555,7 @@ function processImage() {
               nodes.filter((d, i) => d.color && !d.isProcessing && i === (d3Graph.nodes.length - graphNodes.length * 2) + index * 2)
                 .transition()
                 .duration(200)
-                .attr("r", 12);
+                .attr("r", 24);  // Back to normal size
             });
           });
         }
@@ -818,7 +828,7 @@ function addD3NodeToGraph(x, y, hexColor) {
   const nodes = svg.selectAll(".node")
     .data(d3Graph.nodes)
     .join("circle")
-    .attr("r", n => n.color ? 12 : 2)
+    .attr("r", n => n.color ? 24 : 4)  // 2x bigger
     .style("fill", n => n.color ? n.color : "#333")
     .classed("node", true);
   
@@ -839,6 +849,11 @@ function addD3NodeToGraph(x, y, hexColor) {
     d3.select(this).classed("fixed", false);
     d3Simulation.alpha(1).restart();
   });
+  
+  // Add radial force to push color nodes outward from center
+  d3Simulation.force("radial", d3.forceRadial(150, currentImageWidth / 2, currentImageHeight / 2).strength(n => {
+    return n.color ? 0.05 : 0;
+  }));
   
   // Update tick function
   d3Simulation.on("tick", () => {
@@ -861,10 +876,10 @@ function addD3NodeToGraph(x, y, hexColor) {
     .filter(n => n === colorNode)
     .transition()
     .duration(500)
-    .attr("r", 20)
+    .attr("r", 40)  // Flash to larger size
     .transition()
     .duration(300)
-    .attr("r", 12);
+    .attr("r", 24);  // Back to normal
 }
 
 function initializeEmptyD3Graph(width, height) {
@@ -980,15 +995,15 @@ function addD3ProcessingNode(x, y, hexColor) {
     y: y,
     vx: 0,
     vy: 0,
-    color: undefined,
-    isProcessing: true
+    color: undefined
+    // Don't mark position node as processing - only color nodes get green styling
   };
   
   const link = {
     source: positionNode,
     target: colorNode,
-    index: nextIndex,
-    isProcessing: true
+    index: nextIndex
+    // Don't mark link as processing
   };
   
   d3Graph.nodes.push(colorNode);
@@ -1024,11 +1039,11 @@ function refreshD3Graph() {
   const nodes = svg.selectAll(".node")
     .data(d3Graph.nodes)
     .join("circle")
-    .attr("r", n => n.color ? 12 : 2)
+    .attr("r", n => n.color ? 24 : 4)  // 2x bigger: 24 for color nodes, 4 for pin nodes
     .style("fill", n => n.color ? n.color : "#333")
-    .style("stroke", n => n.isProcessing ? "#00ff00" : "none")
-    .style("stroke-width", n => n.isProcessing ? "2px" : "0")
-    .style("stroke-dasharray", n => n.isProcessing ? "4,2" : "none")
+    .style("stroke", n => n.isProcessing ? "#00ff00" : null)  // null = use CSS default
+    .style("stroke-width", n => n.isProcessing ? "2px" : null)  // null = use CSS default
+    .style("stroke-dasharray", n => n.isProcessing ? "4,2" : null)  // null = use CSS default
     .classed("node", true)
     .classed("processing-node", n => n.isProcessing);
   
@@ -1052,6 +1067,11 @@ function refreshD3Graph() {
     d3.select(this).classed("fixed", false);
     d3Simulation.alpha(1).restart();
   });
+  
+  // Add radial force to push color nodes outward from center
+  d3Simulation.force("radial", d3.forceRadial(150, currentImageWidth / 2, currentImageHeight / 2).strength(n => {
+    return n.color ? 0.05 : 0;
+  }));
   
   // Update tick function
   d3Simulation.on("tick", () => {

@@ -22,6 +22,10 @@ module.exports = {
             {
               from: 'static',
               to: 'static'
+            },
+            {
+              from: 'src/favicon.svg',
+              to: 'favicon.svg'
             }
         ]
     })

@@ -69,7 +69,7 @@ function generateChart(width, height, graph) {
           .selectAll(".node")
           .data(graph.nodes)
           .join("circle")
-          .attr("r", n => n.color ? 12 : 2)
+          .attr("r", n => n.color ? 24 : 4)  // 2x bigger: 24 for color nodes, 4 for pin nodes
           .style("fill", n => n.color ? n.color : "#333")
           .classed("node", true);
 
@@ -79,6 +79,13 @@ function generateChart(width, height, graph) {
     //.force("charge", d3.forceManyBody())
     //.force("center", d3.forceCenter(width / 2, height / 2))
     //.force("link", d3.forceLink(graph.links))
+    // Add radial force to push color nodes outward from center
+    // Using a large radius pushes nodes away from center
+    .force("radial", d3.forceRadial(150, width / 2, height / 2).strength(n => {
+      // Only apply to color nodes, not pin nodes
+      // Gentle strength gives ~18px spread from pin
+      return n.color ? 0.05 : 0;
+    }))
     .on("tick", tick);
 
   const drag = d3
@@ -122,7 +129,7 @@ function generateChart(width, height, graph) {
       .filter((d, i) => d.color && i === colorIndex * 2)
       .transition()
       .duration(200)
-      .attr("r", 12 * scale);
+      .attr("r", 24 * scale);  // Scale from new base size of 24
   }
 
   function resetColorNode(colorIndex) {
@@ -130,7 +137,7 @@ function generateChart(width, height, graph) {
       .filter((d, i) => d.color && i === colorIndex * 2)
       .transition()
       .duration(200)
-      .attr("r", 12);
+      .attr("r", 24);  // Reset to new base size of 24
   }
 
   return {
