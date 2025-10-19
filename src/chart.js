@@ -56,10 +56,10 @@ function createGraph(nodes = []) {
 
 function generateChart(width, height, graph) {
   const svg = d3.create("svg")
-                .attr('width', width*2)
-                .attr('height', height*2),
-                // .attr("viewBox", [0, 0, width, height])
-                // .attr('preserveAspectRatio', 'xMidYMid meet'),
+                .attr('width', width)
+                .attr('height', height)
+                .attr("viewBox", [0, 0, width, height])
+                .attr('preserveAspectRatio', 'xMidYMid meet'),
         link = svg
           .selectAll(".link")
           .data(graph.links)

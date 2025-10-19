@@ -191,12 +191,28 @@ const startClustering = async ({ imageData, iterations = 10, palletSize = 10, wi
       previousCentroids = currentCentroids;
       currentCentroids = centroids;
       
-      // Update progress with detailed information
+      // Convert centroids to hex colors for processing palette preview
+      const processingColors = centroids && centroids.length > 0 ? centroids.map(centroid => {
+        const [h, s, v] = centroid.location(); // Call location() method to get HSV values
+        const hexColor = tinycolor({ h, s, v }).toHexString();
+        return {
+          color: hexColor,
+          x: Math.random() * width,
+          y: Math.random() * height,
+          phase: description
+        };
+      }) : [];
+      
+      // Update progress with detailed information and processing palette
       const levelIndex = resolutionLevels.findIndex(([size]) => size === quadSize);
       const progress = Math.round(((levelIndex + 1) / resolutionLevels.length) * 80); // 80% for resolution processing
+      
+      console.log(`📊 Sending ${processingColors.length} processing colors for ${description}`);
+      
       socks.postMessage({ 
         progressUpdate: progress,
-        status: `Completed ${description} (${downsampledWidth}x${downsampledHeight} pixels)`
+        status: `Completed ${description} (${downsampledWidth}x${downsampledHeight} pixels)`,
+        processingPalette: processingColors
       });
      
     } catch (error) {
